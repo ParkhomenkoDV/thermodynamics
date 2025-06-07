@@ -1,0 +1,15 @@
+.idea
+.ipynb_checkpoints
+__pycache__
+venv/
+
+
+*.html
+*.mp4
+*.bak
+*.cd~
+*.m3d
+*.x_t
+*.stp
+*.tmp
+*.lnk
