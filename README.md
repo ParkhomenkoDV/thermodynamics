@@ -1,2 +1,3 @@
-# gte = gas-turbine engine
-[](gte/images/image.png)
+# thermodynamics
+
+it is a lib with physics functions 
