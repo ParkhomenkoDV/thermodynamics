@@ -1,6 +1,4 @@
 import os
-import sys
-from tqdm import tqdm
 from functools import lru_cache
 
 import pandas as pd
@@ -10,9 +8,6 @@ from scipy import interpolate, integrate
 import matplotlib.pyplot as plt
 
 import mendeleev  # ПСХЭ Менделеева
-
-sys.path.append('D:/Programming/Python')
-sys.path.append('D:/Study/ГТДиГТУ/gte/calculations/libraries')
 
 import decorators
 
