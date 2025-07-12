@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 from colorama import Fore
 import numpy as np
 from numpy import nan, isnan, log
@@ -60,17 +58,22 @@ def atmosphere_standard(height: int | float) -> dict[str : tuple[float, str]]:
     }
 
 
-def efficiency_polytropic(process="", ππ=nan, ηη=nan, k=nan) -> float:
+def efficiency_polytropic(process="", pipi=nan, effeff=nan, k=nan) -> float:
     """Политропический КПД"""
-    if ππ == 1:
+    if pipi == 1:
         return 1
     if process.upper() in ("C", "COMPRESSION"):
-        return ((k - 1) / k) * log(ππ) / log((ππ ** ((k - 1) / k) - 1) / ηη + 1)
+        return ((k - 1) / k) * log(pipi) / log((pipi ** ((k - 1) / k) - 1) / effeff + 1)
     if process.upper() in ("E", "EXTENSION"):
-        return -(k / (k - 1)) / log(ππ) * log(ηη * (1 / (ππ ** ((k - 1) / k)) - 1) + 1)
+        return (
+            -(k / (k - 1))
+            / log(pipi)
+            * log(effeff * (1 / (pipi ** ((k - 1) / k)) - 1) + 1)
+        )
     raise Exception(f'{process} not in ("C", "E")')
 
 
+'''
 def gas_const(substance, a_ox=nan, fuel="", **kwargs) -> float:
     """Газовая постоянная [Дж/кг/К]"""
     if substance.upper() in ("AIR", "ВОЗДУХ"):
@@ -115,8 +118,9 @@ def gas_const(substance, a_ox=nan, fuel="", **kwargs) -> float:
             Fore.RED + f"fuel not found! in function {gas_const.__name__}" + Fore.RESET
         )
         return nan
+'''
 
-
+'''
 def l_stoichiometry(fuel: str) -> float:
     """Стехиометрический коэффициент []"""
     if fuel.upper() in (
@@ -166,8 +170,9 @@ def l_stoichiometry(fuel: str) -> float:
     else:
         print(Fore.RED + "Fuel not found!" + " in function " + l_stoichiometry.__name__)
         return nan
-
 '''
+
+"""
 EXCEL_Cp_air = pd.read_excel("libraries/Теплоёмкость воздуха.xlsx", header=None)
 Cp_air = interpolate.RectBivariateSpline(
     EXCEL_Cp_air.T[0].iloc[1:],  # T
@@ -211,8 +216,9 @@ Cp_kerosene = interpolate.interp1d(
     fill_value="extrapolate",
 )
 del EXCEL_Cp_kerosene
-'''
+"""
 
+'''
 def Cp(substance: str, T=nan, P=nan, a_ox=nan, fuel: str = "", **kwargs) -> float:
     """Теплоемкость при постоянном давлении"""
 
@@ -350,8 +356,9 @@ def Cp(substance: str, T=nan, P=nan, a_ox=nan, fuel: str = "", **kwargs) -> floa
         + Fore.RESET
     )
     return nan
+'''
 
-
+'''
 def Qa1(fuel) -> float:
     """Низшая теплота сгорания горючего при коэффициенте избытка окислителя = 1"""
     if fuel.upper() in (
@@ -379,42 +386,44 @@ def Qa1(fuel) -> float:
             Fore.RED + "not found fuel!" + " in function " + Qa1.__name__ + Fore.RESET
         )
         return nan
+'''
 
 
 def viscosity(
-    substance: str, T=nan, a_ox=nan
+    substance: str, temperature=nan, a_ox=nan
 ) -> float:  # dynamic viscosity -> kinematic viscosity добавить
     """Динамическая вязкость"""
     if substance.upper() in ("EXHAUST", "ВЫХЛОП"):
         return 10 ** (-5) * (
-            0.229 * (T / 1000) ** 3
-            - 1.333 * (T / 1000) ** 2
-            + 4.849 * (T / 1000)
-            + 0.505
+            0.229 * (temperature / 1000) ** 3
+            - 1.333 * (temperature / 1000) ** 2
+            + 4.849 * (temperature / 1000) ** 1
+            + 0.505 * (temperature / 1000) ** 0
             - 0.275 / a_ox
         )
-    else:
-        print(Fore.RED + "Not found substance" + " in function " + Cp.__name__)
-        return nan
+    raise Exception(f"Not found substance {substance}")
 
 
-def g_cool_CIAM(TT1, TT2, T_lim) -> float:
+def g_cool_CIAM(temperature_input, temperature_output, temperature_lim) -> float:
     """Эмпирический относительный массовый расход на охлаждение
     по max температурам до и после КС и допустимой температуре,
     отнесенный к расходу на входе в горячую часть"""
-    θ = (TT2 - T_lim) / (TT2 - TT1)
+    θ = (temperature_output - temperature_lim) / (
+        temperature_output - temperature_input
+    )
     g_cool = 0.059 * θ / (1 - 1.42 * θ)
     return g_cool if g_cool > 0 else 0
 
 
-def g_cool_BMSTU(T, T_lim=1000) -> float:
+def g_cool_BMSTU(temperature_max, temperature_lim=1000) -> float:
     """Эмпирический относительный массовый расход на охлаждение по max и допустимой температуре,
     отнесенный к расходу на входе в горячую часть"""
-    g_cool = (
-        0.01
-        + 0.09 * ((T - T_lim) / 1000)
-        + 0.2 * ((T - T_lim) / 1000) ** 2
-        + 0.16 * ((T - T_lim) / 1000) ** 3
+    coefs = (0.01, 0.09, 0.2, 0.16)
+    g_cool = sum(
+        (
+            coefs[i] * ((temperature_max - temperature_lim) / 1000) ** i
+            for i in range(len(coefs))
+        )
     )
     return g_cool if g_cool > 0 else 0
 
@@ -437,239 +446,3 @@ def mixing_param(
         print(Fore.RED + f"Limit of iteration in {mixing_param.__name__}!" + Fore.RESET)
         return nan
 '''
-
-'''
-class Substance(dict):
-    """Химическое вещество"""
-
-    def __init__(self, composition: dict[str:float]) -> None:
-        assert type(composition) is dict
-        elements, fractions = map(tuple, (composition.keys(), composition.values()))
-        assert all(map(lambda element: type(element) is str, elements))
-        assert all(map(lambda fraction: type(fraction) in (float, int), fractions))
-        assert all(map(lambda fraction: 0 <= fraction, fractions))
-        # сортировка по убыванию массовой доли элемента
-        composition = dict(
-            sorted(composition.items(), key=lambda item: item[1], reverse=True)
-        )
-        super(Substance, self).__init__(composition)
-
-    def __add__(self, other):
-        assert isinstance(other, Substance)
-        composition = self.composition.copy()
-        for el in other.composition.keys():
-            if el not in composition:
-                composition[el] = other.composition[el]
-            else:
-                composition[el] += other.composition[el]
-
-        return Substance(composition)
-
-    @staticmethod
-    def formula_to_dict(formula: str) -> dict[str:int]:
-        result = dict()
-
-        i = 0
-        while i < len(formula):
-            if i + 1 < len(formula) and formula[i + 1].islower():
-                atom = formula[i : i + 2]
-                i += 2
-            else:
-                atom = formula[i]
-                i += 1
-
-            count = 0
-            while i < len(formula) and formula[i].isdigit():
-                count = count * 10 + int(formula[i])
-                i += 1
-
-            if count == 0:
-                count = 1
-
-            if atom in result:
-                result[atom] += count
-            else:
-                result[atom] = count
-
-        return result
-
-    @property
-    def composition(self) -> dict[str:int]:
-        return dict(self)
-
-    @property
-    def mol_mass(self) -> tuple[float, str]:
-        """Молярная масса"""
-        if hasattr(self, "_Substance__mol_mass"):
-            return self.__mol_mass
-        m = sum(self.composition.values())
-        self.__mol_mass = 0
-
-        @lru_cache(maxsize=None)  # кэширование медленнее, если не применяется!
-        def get_element_mass(element: str):
-            return mendeleev.element(element).mass
-
-        for formula, fraction in self.composition.items():
-            formula_dict = Substance.formula_to_dict(formula)
-            for el, atoms in formula_dict.items():
-                self.__mol_mass += get_element_mass(el) * atoms * fraction
-
-        """for formula, fraction in self.composition.items():
-            for el, atoms in Substance.formula_to_dict(formula).items():
-                self.__mol_mass += mendeleev.element(el).mass * atoms * fraction"""
-
-        self.__mol_mass = self.__mol_mass / m / 1000, "kg/mol"
-        return self.__mol_mass
-
-    @property
-    def gas_const(self) -> tuple[float, str]:
-        """Газовая постоянная"""
-        if hasattr(self, "_Substance__gas_const"):
-            return self.__gas_const
-        self.__gas_const = GAS_CONST / self.mol_mass[0], "J/kg/K"
-        return self.__gas_const
-
-    def Cp(
-        self, T: float | int | list = nan, P: float | int = nan, epsrel=0.01
-    ) -> tuple[float, str]:
-        """Теплоемкость при постоянном давлении"""
-        if type(T) in (float, np.float64, int) and type(P) in (float, np.float64, int):
-            return sum(
-                [Cp(key, T=T, P=P) * value for key, value in self.items()]
-            ) / sum(self.values()), "J/kg/K"
-        elif type(T) is list and type(P) in (float, int):
-            assert len(T) == 2
-            assert all(map(lambda t: type(t) in (float, np.float64, int), T))
-            assert T[0] != T[1]
-            return integrate.quad(
-                lambda t: sum(
-                    [
-                        Cp(key, T=t, P=P) * value / sum(self.values())
-                        for key, value in self.items()
-                    ]
-                ),
-                T[0],
-                T[1],
-                epsrel=epsrel,
-            )[0] / (T[1] - T[0]), "J/kg/K"
-
-        elif type(T) in (float, int) and type(P) is list:
-            assert len(P) == 2
-            assert all(map(lambda p: type(p) in (float, int), P))
-            assert P[0] != P[1]
-            return integrate.quad(
-                lambda p: sum(
-                    [
-                        Cp(key, T=T, P=p) * value / sum(self.values())
-                        for key, value in self.items()
-                    ]
-                ),
-                P[0],
-                P[1],
-                epsrel=epsrel,
-            )[0] / (P[1] - P[0]), "J/kg/K"
-        elif type(T) is list and type(P) is list:
-            assert len(T) == 2 and len(P) == 2
-            assert all(map(lambda t: type(t) in (float, int), T)) and all(
-                map(lambda p: type(p) in (float, int), P)
-            )
-            assert T[0] != T[1] and P[0] != P[1]
-            return integrate.dblquad(
-                lambda t, p: 1,
-                0,
-                1,
-                lambda xu: Ydown(xu),
-                lambda xd: Yup(xd),
-                epsrel=epsrel,
-            )[0], "J/kg/K"
-        else:
-            raise ValueError
-
-    @property
-    def excess_oxidizing(self) -> float:
-        """Коэффициент избытка окислителя"""
-        return 0
-
-    @decorators.timeit()
-    def summary(self, show=True) -> dict:
-        result = {
-            "composition": self.composition,
-            "mol_mass": self.mol_mass,
-            "gas_const": self.gas_const,
-        }
-        if show:
-            for key, value in result.items():
-                print(f"{key}: {value}")
-
-        return result
-'''
-
-"""
-if __name__ == "__main__":
-    if 0:
-        print(Fore.YELLOW + f"testing {atmosphere_standard.__name__}" + Fore.RESET)
-        for H in (-8_000, -2_000, 0, 4_000, 11_000, 16_000, 32_000):
-            print(f"H = {H}: {atmosphere_standard(H)}")
-
-    if 1:
-        print(Fore.YELLOW + f"testing {Substance.__name__}" + Fore.RESET)
-        if 0:
-            s1 = Substance({"N2": 75.5})
-            s1.summary()
-            s2 = Substance({"O2": 23.15})
-            s2.summary()
-            s3 = Substance({"Ar": 1.292})
-            s3.summary()
-            s4 = Substance({"Ne": 0.0014})
-            s4.summary()
-            s5 = Substance({"H2": 0.0008})
-
-            s = s1 + s2 + s3 + s4 + s5
-            s.summary()
-
-            T = np.linspace(300, 600, 300 + 1)
-            plt.plot(T, [Cp("AIR", T=t) for t in T], color="red")
-            plt.plot(T, [s.Cp(T=float(t))[0] for t in T], color="blue")
-            plt.grid(True)
-            plt.xlabel("T [K]")
-            plt.ylabel("Cp [J/kg/K]")
-            plt.xlim(T[0], T[-1])
-            plt.ylim(1000, 1200)
-            plt.show()
-
-        if 1:
-            s = Substance(
-                {
-                    "N2": 0.755,
-                    "O2": 0.2315,
-                    "Ar": 0.01292,
-                    "Ne": 0.000014,
-                    "H2": 0.000008,
-                }
-            )
-            s.summary()
-
-            T = np.arange(300, 800, 1)
-            plt.plot(T, [Cp("AIR", T=t) for t in T], color="red")
-            plt.plot(T, [s.Cp(T=float(t))[0] for t in T], color="blue")
-            plt.grid(True)
-            plt.xlabel("T [K]")
-            plt.ylabel("Cp [J/kg/K]")
-            plt.xlim(T[0], T[-1])
-            plt.ylim(1000, 1200)
-            plt.show()
-
-        if 0:
-            s = Substance({"H2O": 11.25})
-            s.summary()
-
-            s = Substance({"CO2": 12})
-            s.summary()
-
-            print(dir(s))
-
-        if 0:
-            print(av(Cp, [400, 500], [10**5, 2 * 10**5]))
-            print(Cp("air", T=458))
-            print(Cp("air", T=458, P=2 * 10**5))
-"""
