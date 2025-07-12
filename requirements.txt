@@ -6,4 +6,5 @@ openpyxl
 jinja2
 scipy
 matplotlib
-seaborn
+
+pytest
