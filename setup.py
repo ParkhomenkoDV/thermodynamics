@@ -15,8 +15,8 @@ setup(
     long_description_content_type='text/markdown',  # если long_description = .md
     author='Daniil Andryushin',
     author_email='',
-    url='https://github.com/ParkhomenkoDV/gte.git',
+    url='https://github.com/ParkhomenkoDV/thermodynamics.git',
     packages=find_packages(),
-    python_requires='>=3.11',
+    python_requires='>=3.9',
     install_requires=install_requires,
 )
