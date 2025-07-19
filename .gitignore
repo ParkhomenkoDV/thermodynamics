@@ -1,9 +1,12 @@
 .idea
 .ipynb_checkpoints
-__pycache__
-venv/
+.pytest_cache
+.venv
+
 **/.DS_Store
 
+__pycache__
+venv/
 
 *.html
 *.mp4
