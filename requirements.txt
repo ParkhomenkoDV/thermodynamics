@@ -8,3 +8,5 @@ scipy
 matplotlib
 
 pytest
+
+mathematics @ git+https://github.com/ParkhomenkoDV/mathematics.git@master

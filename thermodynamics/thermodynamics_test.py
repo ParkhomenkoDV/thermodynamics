@@ -2,7 +2,7 @@ import pytest
 
 from numpy import nan, isnan, isclose
 
-from thermodynamics import gdf
+from thermodynamics import *
 
 
 def test_gdf():
