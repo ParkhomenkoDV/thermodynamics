@@ -1,7 +1,8 @@
 import numpy as np
 from numpy import isnan, log, nan
-from parameters import parameters as tdp
 from scipy import integrate, interpolate
+
+from .parameters import parameters as tdp
 
 # import decorators
 
