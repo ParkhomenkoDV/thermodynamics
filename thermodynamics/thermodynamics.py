@@ -1,11 +1,7 @@
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from numpy import isnan, log, nan
 from parameters import parameters as tdp
 from scipy import integrate, interpolate
-
-# import mendeleev  # ПСХЭ Менделеева
 
 # import decorators
 
@@ -208,51 +204,6 @@ def l_stoichiometry(fuel: str) -> float:
         return nan
 '''
 
-"""
-EXCEL_Cp_air = pd.read_excel("libraries/Теплоёмкость воздуха.xlsx", header=None)
-Cp_air = interpolate.RectBivariateSpline(
-    EXCEL_Cp_air.T[0].iloc[1:],  # T
-    EXCEL_Cp_air[0].iloc[1:],  # P
-    EXCEL_Cp_air.T.iloc[1:, 1:],  # Cp_air
-    kx=1,
-    ky=1,
-)  # x: linear, y: linear
-del EXCEL_Cp_air
-
-EXCEL_Cp_clean_kerosene = pd.read_excel(
-    "libraries/Чистая теплоемкость керосина.xlsx", header=None
-)
-Cp_clean_kerosene = interpolate.interp1d(
-    EXCEL_Cp_clean_kerosene[0].iloc[1:],
-    EXCEL_Cp_clean_kerosene[1].iloc[1:],
-    kind="linear",
-    fill_value="extrapolate",
-)
-del EXCEL_Cp_clean_kerosene
-
-EXCEL_Cp_clean_diesel = pd.read_excel(
-    "libraries/Чистая теплоемкость дизеля.xlsx", header=None
-)
-Cp_clean_diesel = interpolate.interp1d(
-    EXCEL_Cp_clean_diesel[0].iloc[1:],
-    EXCEL_Cp_clean_diesel[1].iloc[1:],
-    kind="linear",
-    bounds_error=False,
-)
-del EXCEL_Cp_clean_diesel
-
-# TODO предупреждение об экстраполяции
-EXCEL_Cp_kerosene = pd.read_excel(
-    "libraries/Теплоёмкость жидкого керосина.xlsx", header=None
-)
-Cp_kerosene = interpolate.interp1d(
-    EXCEL_Cp_kerosene[1].iloc[1:],
-    EXCEL_Cp_kerosene[2].iloc[1:],
-    kind="linear",
-    fill_value="extrapolate",
-)
-del EXCEL_Cp_kerosene
-"""
 
 '''
 def Cp(substance: str, T=nan, P=nan, a_ox=nan, fuel: str = "", **kwargs) -> float:
@@ -425,22 +376,14 @@ def Qa1(fuel) -> float:
 '''
 
 
-def viscosity(
-    substance: str, temperature=nan, a_ox=nan
-) -> float:  # dynamic viscosity -> kinematic viscosity добавить
+def dynamic_exhaust_viscosity(temperature=nan, a_ox=nan) -> float:
     """Динамическая вязкость"""
-    if substance.upper() in ("EXHAUST", "ВЫХЛОП"):
-        return 10 ** (-5) * (
-            0.229 * (temperature / 1000) ** 3
-            - 1.333 * (temperature / 1000) ** 2
-            + 4.849 * (temperature / 1000) ** 1
-            + 0.505 * (temperature / 1000) ** 0
-            - 0.275 / a_ox
-        )
-    raise Exception(f"Not found substance {substance}")
+    coefs = (+0.505, +4.849, -1.333, +0.229)
+    t = temperature / 1_000
+    return 10 ** (-5) * (sum(coefs[i] * t**i for i in range(len(coefs))) - 0.275 / a_ox)
 
 
-def g_cool_CIAM(temperature_input, temperature_output, temperature_lim) -> float:
+def g_cool_ciam(temperature_input, temperature_output, temperature_lim) -> float:
     """Эмпирический относительный массовый расход на охлаждение
     по max температурам до и после КС и допустимой температуре,
     отнесенный к расходу на входе в горячую часть"""
@@ -451,34 +394,10 @@ def g_cool_CIAM(temperature_input, temperature_output, temperature_lim) -> float
     return g_cool if g_cool > 0 else 0
 
 
-def g_cool_BMSTU(temperature_max, temperature_lim=1000) -> float:
+def g_cool_bmstu(temperature_max, temperature_lim=1000) -> float:
     """Эмпирический относительный массовый расход на охлаждение по max и допустимой температуре,
     отнесенный к расходу на входе в горячую часть"""
     coefs = (0.01, 0.09, 0.2, 0.16)
-    g_cool = sum(
-        (
-            coefs[i] * ((temperature_max - temperature_lim) / 1000) ** i
-            for i in range(len(coefs))
-        )
-    )
+    dt = (temperature_max - temperature_lim) / 1_000
+    g_cool = sum(coefs[i] * dt**i for i in range(len(coefs)))
     return g_cool if g_cool > 0 else 0
-
-
-'''
-def mixing_param(
-    params: list, mass_flows: list, contourings: list, error=0.01, Niter=20
-) -> float:
-    """Расчет параметров смешения"""
-    mix_param = params[0]
-    for iteration in range(Niter):
-        m_p = sum(
-            [params[i] * mass_flows[i] * contourings[i] for i in range(len(params))]
-        )
-        m_p /= sum([mass_flows[i] * contourings[i] for i in range(len(params))])
-        if eps("rel", mix_param, m_p) <= error:
-            return m_p
-        mix_param = m_p
-    else:
-        print(Fore.RED + f"Limit of iteration in {mixing_param.__name__}!" + Fore.RESET)
-        return nan
-'''
