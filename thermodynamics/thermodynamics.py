@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from colorama import Fore
 from numpy import isnan, log, nan
+from parameters import parameters as tdp
 from scipy import integrate, interpolate
 
 # import mendeleev  # ПСХЭ Менделеева
@@ -53,8 +53,8 @@ def pressure_atmosphere_standard(height) -> tuple[float, str]:
 def atmosphere_standard(height: int | float) -> dict[str : tuple[float, str]]:
     """Атмосфера стандартная ГОСТ 4401-81"""
     return {
-        "temperature": (float(temperature_atmosphere_standard(height)), "K"),
-        "pressure": (float(pressure_atmosphere_standard(height)), "Pa"),
+        tdp.T: temperature_atmosphere_standard(height),
+        tdp.P: pressure_atmosphere_standard(height),
     }
 
 
