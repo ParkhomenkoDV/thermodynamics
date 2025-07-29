@@ -1,9 +1,9 @@
-from colorama import Fore
-import numpy as np
-from numpy import nan, isnan, log
-import pandas as pd
-from scipy import interpolate, integrate
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from colorama import Fore
+from numpy import isnan, log, nan
+from scipy import integrate, interpolate
 
 # import mendeleev  # ПСХЭ Менделеева
 
@@ -71,6 +71,35 @@ def efficiency_polytropic(process="", pipi=nan, effeff=nan, k=nan) -> float:
             * log(effeff * (1 / (pipi ** ((k - 1) / k)) - 1) + 1)
         )
     raise Exception(f'{process} not in ("C", "E")')
+
+
+def chemical_formula_to_dict(formula: str) -> dict[str:int]:
+    """Разбор хмической формулы поэлементно"""
+    result = dict()
+
+    i = 0
+    while i < len(formula):
+        if i + 1 < len(formula) and formula[i + 1].islower():
+            atom = formula[i : i + 2]
+            i += 2
+        else:
+            atom = formula[i]
+            i += 1
+
+        count = 0
+        while i < len(formula) and formula[i].isdigit():
+            count = count * 10 + int(formula[i])
+            i += 1
+
+        if count == 0:
+            count = 1
+
+        if atom in result:
+            result[atom] += count
+        else:
+            result[atom] = count
+
+    return result
 
 
 '''
