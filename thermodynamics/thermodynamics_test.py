@@ -1,6 +1,5 @@
 import pytest
-
-from numpy import nan, isnan, isclose
+from numpy import isclose, isnan, nan
 
 from thermodynamics import *
 

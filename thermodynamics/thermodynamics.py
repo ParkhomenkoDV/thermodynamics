@@ -15,7 +15,7 @@ from scipy import integrate, interpolate
 np.seterr(invalid="ignore")  # игнорирование ошибок с nan
 
 T0 = 273.15  # Абсолютный ноль температуры
-GAS_CONST = 8.314_462_618_153_24  # Универсальная газовая п÷остоянная
+GAS_CONST = 8.314_462_618_153_24  # Универсальная газовая постоянная
 
 
 def gdf(parameter: str, λ: float = nan, k: float = nan) -> float:
@@ -102,7 +102,7 @@ def chemical_formula_to_dict(formula: str) -> dict[str:int]:
     return result
 
 
-def adiabatic_index(gas_const, cp) -> float:
+def adiabatic_index(gas_const: float, cp: float) -> float:
     """Показатель адиабаты"""
     if cp == gas_const:
         return nan
