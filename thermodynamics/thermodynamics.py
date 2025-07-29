@@ -102,6 +102,13 @@ def chemical_formula_to_dict(formula: str) -> dict[str:int]:
     return result
 
 
+def adiabatic_index(gas_const, cp) -> float:
+    """Показатель адиабаты"""
+    if cp == gas_const:
+        return nan
+    return cp / (cp - gas_const)
+
+
 '''
 def gas_const(substance, a_ox=nan, fuel="", **kwargs) -> float:
     """Газовая постоянная [Дж/кг/К]"""
