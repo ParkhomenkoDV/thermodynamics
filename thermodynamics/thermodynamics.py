@@ -41,7 +41,7 @@ def temperature_atmosphere_standard(height) -> tuple[float, str]:
 def pressure_atmosphere_standard(height) -> tuple[float, str]:
     """Статическое давление стандартной атмосферы"""
     return (
-        101_325 * (temperature_atmosphere_standard(height) / 288.15) ** 5.2533
+        101_325 * (temperature_atmosphere_standard(height)[0] / 288.15) ** 5.2533
         if height < 11_000
         else 22_699.9 * np.exp((11_000 - height) / 6318)
     ), "Pa"

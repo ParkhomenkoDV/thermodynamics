@@ -2,6 +2,7 @@ from mathematics import Constants
 
 # термодинамические параметры
 parameters = Constants(
+    l="thermal_conductivity",  # теплопроводность
     Cp="heat_capacity_at_constant_pressure",  # теплокмкость при постоянном давлении
     Cv="heat_capacity_at_constant_volume",  # теплокмкость при постоянном объеме
     k="adiabatic_index",  # показатель адиабаты
@@ -26,6 +27,7 @@ parameters = Constants(
     pi="static_pressure_ratio",  # степень повышения статического давления
     titi="total_temperature_ratio",  # степень повышения полной температуры
     ti="static_temperature_ratio",  # степень повышения статической температуры
+    # числа
     mach="mach_number",  # число Маха
     Nu="nusselt_number",  # число Нуссельта
 )
