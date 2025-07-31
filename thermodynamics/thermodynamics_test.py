@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from numpy import isclose, isnan, nan
 
@@ -94,11 +95,74 @@ class TestAtmosphereStandard:
         temp, _ = temperature_atmosphere_standard(height)
         pres, _ = pressure_atmosphere_standard(height)
 
-        if height < 11000:
+        if height < 11_000:
             # Проверка барометрической формулы для тропосферы
             expected_pres = 101325 * (temp / 288.15) ** 5.2533
             assert pres == pytest.approx(expected_pres, rel=1e-3)
         else:
             # Проверка экспоненциального закона для стратосферы
-            expected_pres = 22699.9 * np.exp((11000 - height) / 6318)
+            expected_pres = 22699.9 * np.exp((11_000 - height) / 6318)
             assert pres == pytest.approx(expected_pres, rel=1e-3)
+
+
+class TestAdiabaticIndex:
+    """Тесты для расчета показателя адиабаты"""
+
+    # Параметризованные тесты для нормальных случаев
+    @pytest.mark.parametrize(
+        "gas_const, cp, expected",
+        [
+            # Стандартные значения для воздуха
+            (287.0, 1005.0, pytest.approx(1.4, rel=1e-3)),
+            # Другие газы
+            (297.0, 1040.0, pytest.approx(1.4, rel=1e-2)),
+            (189.0, 1300.0, pytest.approx(1.17, rel=1e-2)),
+            # Крайние случаи
+            (100.0, 150.0, 3.0),  # γ = 150/(150-100) = 3
+            (200.0, 400.0, 2.0),  # γ = 400/(400-200) = 2
+        ],
+    )
+    def test_normal_cases(self, gas_const, cp, expected):
+        """Тест корректных расчетов"""
+        assert adiabatic_index(gas_const, cp) == expected
+
+    # Тест для особого случая (cp == gas_const)
+    def test_equal_values(self):
+        """Тест случая, когда cp == gas_const"""
+        assert adiabatic_index(300.0, 300.0) is nan
+
+    # Тесты для обработки ошибок
+    @pytest.mark.parametrize(
+        "gas_const, cp",
+        [
+            (0.0, 100.0),  # Нулевой gas_const
+            (100.0, 0.0),  # Нулевой cp
+            (100.0, 99.0),  # cp < gas_const
+            (-100.0, 200.0),  # Отрицательный gas_const
+            (100.0, -200.0),  # Отрицательный cp
+        ],
+    )
+    def test_invalid_values(self, gas_const, cp):
+        """Тест некорректных входных значений"""
+        result = adiabatic_index(gas_const, cp)
+        assert isnan(result) or isinstance(result, (float, np.number))
+
+    # Тесты для типов данных
+    @pytest.mark.parametrize(
+        "gas_const, cp",
+        [
+            ("300", 400.0),  # Строка вместо числа
+            (300.0, None),  # None вместо числаs
+            ([300], 400.0),  # Список вместо числа
+        ],
+    )
+    def test_invalid_types(self, gas_const, cp):
+        """Тест нечисловых входных данных"""
+        with pytest.raises(TypeError):
+            adiabatic_index(gas_const, cp)
+
+    # Тест возвращаемого типа
+    def test_return_type(self):
+        """Проверка что возвращается float"""
+        result = adiabatic_index(287.0, 1005.0)
+        assert isinstance(result, float)
