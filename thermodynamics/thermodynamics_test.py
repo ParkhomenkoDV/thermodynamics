@@ -336,3 +336,101 @@ class TestGasConst:
         # Проверяем что не возникает ошибок при большом alpha
         result = gas_const("exhaust", excess_oxidizing=1e10, fuel="kerosene")
         assert result == pytest.approx(288.1954313)  # Второе слагаемое стремится к 0
+
+
+class TestStoichiometry:
+    """Тесты для функции stoichiometry()"""
+
+    # Тесты для керосиновой группы
+    @pytest.mark.parametrize(
+        "fuel",
+        [
+            "C2H8N2",
+            "KEROSENE",
+            "T-1",
+            "T-2",
+            "TC-1",
+            "ТС1",
+            "КЕРОСИН",
+            "Т-1",
+            "Т-2",
+            "ТС-1",
+            "TC1",
+        ],
+    )
+    def test_kerosene_group(self, fuel):
+        """Проверка стехиометрического коэффициента для керосиновой группы"""
+        assert stoichiometry(fuel) == pytest.approx(14.61)
+
+    # Тесты для бензиновой группы
+    @pytest.mark.parametrize("fuel", ["PETROL", "GASOLINE", "БЕНЗИН"])
+    def test_petrol_group(self, fuel):
+        assert stoichiometry(fuel) == pytest.approx(14.91)
+
+    # Тесты для дизельной группы
+    @pytest.mark.parametrize(
+        "fuel",
+        [
+            "SOLAR",
+            "SOLAR OIL",
+            "SOLAR_OIL",
+            "СОЛЯРКА",
+            "СОЛЯРОВОЕ МАСЛО",
+            "СОЛЯРОВОЕ_МАСЛО",
+            "DIESEL",
+            "ДИЗЕЛЬ",
+        ],
+    )
+    def test_diesel_group(self, fuel):
+        assert stoichiometry(fuel) == pytest.approx(14.35)
+
+    # Тесты для мазутной группы
+    @pytest.mark.parametrize("fuel", ["MAZUT", "МАЗУТ", "Ф5", "Ф12"])
+    def test_mazut_group(self, fuel):
+        assert stoichiometry(fuel) == pytest.approx(13.31)
+
+    # Тесты для природного газа
+    def test_natural_gas(self):
+        expected = np.mean([15.83, 13.69, 16.84, 16.51, 15.96, 16.34, 16.85, 15.93])
+        assert stoichiometry("ПРИРОДНЫЙ ГАЗ") == pytest.approx(expected)
+        assert stoichiometry("ПРИРОДНЫЙ_ГАЗ") == pytest.approx(expected)
+
+    # Тесты для коксового газа
+    def test_coke_gas(self):
+        assert stoichiometry("КОКСОВЫЙ ГАЗ") == pytest.approx(9.908)
+        assert stoichiometry("КОКСОВЫЙ_ГАЗ") == pytest.approx(9.908)
+
+    # Тесты на обработку ошибок
+    def test_invalid_fuel_type(self):
+        """Проверка TypeError при передаче не строкового аргумента"""
+        with pytest.raises((AssertionError, TypeError)):
+            stoichiometry(123)
+        with pytest.raises((AssertionError, TypeError)):
+            stoichiometry(None)
+
+    def test_unknown_fuel(self):
+        """Проверка ValueError при передаче неизвестного топлива"""
+        with pytest.raises(ValueError):
+            stoichiometry("unknown_fuel")
+        with pytest.raises(ValueError):
+            stoichiometry("")
+
+    # Тесты на регистронезависимость
+    def test_case_insensitivity(self):
+        """Проверка работы функции с разным регистром"""
+        assert stoichiometry("kerosene") == stoichiometry("KEROSENE")
+        assert stoichiometry("бензин") == stoichiometry("БЕНЗИН")
+        assert stoichiometry("t-1") == stoichiometry("T-1")
+
+    # Тесты на пробелы и подчеркивания
+    def test_space_underscore_equivalence(self):
+        """Проверка эквивалентности вариантов с пробелами и подчеркиваниями"""
+        assert stoichiometry("SOLAR OIL") == stoichiometry("SOLAR_OIL")
+        assert stoichiometry("ПРИРОДНЫЙ ГАЗ") == stoichiometry("ПРИРОДНЫЙ_ГАЗ")
+        assert stoichiometry("СОЛЯРОВОЕ МАСЛО") == stoichiometry("СОЛЯРОВОЕ_МАСЛО")
+
+    # Тест на пустую строку
+    def test_empty_string(self):
+        """Проверка обработки пустой строки"""
+        with pytest.raises(ValueError):
+            stoichiometry("")

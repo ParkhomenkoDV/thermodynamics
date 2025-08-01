@@ -180,10 +180,11 @@ def gas_const(substance: str, excess_oxidizing=nan, fuel: str = "") -> float:
         raise ValueError(f"{substance} not found")
 
 
-'''
-def l_stoichiometry(fuel: str) -> float:
+def stoichiometry(fuel: str) -> float:
     """Стехиометрический коэффициент []"""
-    if fuel.upper() in (
+    assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
+    fuel = fuel.upper()
+    if fuel in (
         "C2H8N2",
         "KEROSENE",
         "T-1",
@@ -197,9 +198,9 @@ def l_stoichiometry(fuel: str) -> float:
         "TC1",
     ):
         return 14.61
-    elif fuel.upper() in ("PETROL", "GASOLINE", "БЕНЗИН"):
+    elif fuel in ("PETROL", "GASOLINE", "БЕНЗИН"):
         return 14.91
-    elif fuel.upper() in (
+    elif fuel in (
         "SOLAR",
         "SOLAR OIL",
         "SOLAR_OIL",
@@ -210,27 +211,27 @@ def l_stoichiometry(fuel: str) -> float:
         "ДИЗЕЛЬ",
     ):
         return 14.35
-    elif fuel.upper() in ("MAZUT", "МАЗУТ", "Ф5", "Ф12"):
+    elif fuel in ("MAZUT", "МАЗУТ", "Ф5", "Ф12"):
         return 13.31
-    elif fuel.upper() in ("ПРИРОДНЫЙ ГАЗ", "ПРИРОДНЫЙ_ГАЗ"):
+    elif fuel in ("ПРИРОДНЫЙ ГАЗ", "ПРИРОДНЫЙ_ГАЗ"):
         return np.mean(
-            {
-                "Березовский": 15.83,
-                "Войвожский": 13.69,
-                "Дашавский": 16.84,
-                "Карадагеказский": 16.51,
-                "Ленинградский": 15.96,
-                "Саратовский": 16.34,
-                "Ставропольский": 16.85,
-                "Щебеленский": 15.93,
-            }.values()
+            tuple(
+                {
+                    "Березовский": 15.83,
+                    "Войвожский": 13.69,
+                    "Дашавский": 16.84,
+                    "Карадагеказский": 16.51,
+                    "Ленинградский": 15.96,
+                    "Саратовский": 16.34,
+                    "Ставропольский": 16.85,
+                    "Щебеленский": 15.93,
+                }.values()
+            )
         )
-    elif fuel.upper() in ("КОКСОВЫЙ ГАЗ", "КОКСОВЫЙ_ГАЗ"):
+    elif fuel in ("КОКСОВЫЙ ГАЗ", "КОКСОВЫЙ_ГАЗ"):
         return 9.908
     else:
-        print(Fore.RED + "Fuel not found!" + " in function " + l_stoichiometry.__name__)
-        return nan
-'''
+        raise ValueError(f"{fuel} not found")
 
 
 '''
