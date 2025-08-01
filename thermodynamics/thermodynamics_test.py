@@ -434,3 +434,82 @@ class TestStoichiometry:
         """Проверка обработки пустой строки"""
         with pytest.raises(ValueError):
             stoichiometry("")
+
+
+class TestChemicalFormulaToDict:
+    """Тесты для функции chemical_formula_to_dict()"""
+
+    # Базовые тесты для простых формул
+    def test_single_element_no_count(self):
+        assert chemical_formula_to_dict("H") == {"H": 1}
+
+    def test_single_element_with_count(self):
+        assert chemical_formula_to_dict("H2") == {"H": 2}
+
+    def test_multiple_elements(self):
+        assert chemical_formula_to_dict("H2O") == {"H": 2, "O": 1}
+
+    # Тесты для двухатомных элементов
+    def test_two_letter_elements(self):
+        assert chemical_formula_to_dict("NaCl") == {"Na": 1, "Cl": 1}
+
+    def test_two_letter_with_counts(self):
+        assert chemical_formula_to_dict("Fe2O3") == {"Fe": 2, "O": 3}
+
+    # Тесты для сложных формул
+    def test_complex_formula(self):
+        assert chemical_formula_to_dict("C6H12O6") == {"C": 6, "H": 12, "O": 6}
+
+    def test_formula_with_multiple_two_letter(self):
+        assert chemical_formula_to_dict("NaOH") == {"Na": 1, "O": 1, "H": 1}
+
+    # Тесты для граничных случаев
+    def test_empty_string(self):
+        assert chemical_formula_to_dict("") == {}
+
+    def test_single_two_letter_element(self):
+        assert chemical_formula_to_dict("Mg") == {"Mg": 1}
+
+    def test_large_counts(self):
+        assert chemical_formula_to_dict("C100H200") == {"C": 100, "H": 200}
+
+    # Тесты для повторяющихся элементов
+    def test_repeating_elements(self):
+        assert chemical_formula_to_dict("CH3COOH") == {"C": 2, "H": 4, "O": 2}
+
+    # Тесты для нестандартных случаев
+    def test_single_digit_after_two_letter(self):
+        assert chemical_formula_to_dict("PbO2") == {"Pb": 1, "O": 2}
+
+    def test_multiple_digits_after_two_letter(self):
+        assert chemical_formula_to_dict("FeSO4") == {"Fe": 1, "S": 1, "O": 4}
+
+    @pytest.mark.skip
+    def test_invalid_element_start(self):
+        with pytest.raises(ValueError):
+            chemical_formula_to_dict("1H2O")
+
+    @pytest.mark.skip
+    def test_invalid_element_middle(self):
+        with pytest.raises(ValueError):
+            chemical_formula_to_dict("H2O3x")
+
+    @pytest.mark.skip
+    def test_invalid_two_letter_format(self):
+        with pytest.raises(ValueError):
+            chemical_formula_to_dict("Hl2")  # Hl не является валидным элементом
+
+    @pytest.mark.skip
+    def test_lowercase_first_letter(self):
+        with pytest.raises(ValueError):
+            chemical_formula_to_dict("h2O")
+
+    @pytest.mark.skip
+    def test_uppercase_second_letter(self):
+        with pytest.raises(ValueError):
+            chemical_formula_to_dict("NA")  # Должно быть "Na"
+
+    @pytest.mark.skip
+    def test_underscore_in_formula(self):
+        with pytest.raises(ValueError):
+            chemical_formula_to_dict("H2_O")

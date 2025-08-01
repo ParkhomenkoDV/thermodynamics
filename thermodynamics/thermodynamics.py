@@ -93,7 +93,7 @@ def efficiency_polytropic(process="", pipi=nan, effeff=nan, k=nan) -> float:
 
 def chemical_formula_to_dict(formula: str) -> dict[str:int]:
     """Разбор хмической формулы поэлементно"""
-    result = dict()
+    result = {}
 
     i = 0
     while i < len(formula):
@@ -234,36 +234,38 @@ def stoichiometry(fuel: str) -> float:
         raise ValueError(f"{fuel} not found")
 
 
-'''
-def Cp(substance: str, T=nan, P=nan, a_ox=nan, fuel: str = "", **kwargs) -> float:
+def Cp(
+    substance: str,
+    temperature: int | float | np.number,
+    a_ox=nan,
+    fuel: str = "",
+    **kwargs,
+) -> float:
     """Теплоемкость при постоянном давлении"""
-
-    if substance.upper() in ("AIR", "ВОЗДУХ"):
+    assert isinstance(substance, str), TypeError(f"type {substance} must be str")
+    substance = substance.upper()
+    if substance in ("AIR", "ВОЗДУХ"):
         """Теплоемкость воздуха"""
-        if P is not nan and 1 == 0:  # TODO интерполяция по поверхности
-            return Cp_air(T, P)[0][0]
-        else:
-            # PTM 1677-83
-            _T = T / 1000
-            coefs = (
-                0.2521923,
-                -0.1186612,
-                0.3360775,
-                -0.3073812,
-                0.1382207,
-                -0.03090246,
-                0.002745383,
-            )
-            return 4187 * sum([coef * _T**i for i, coef in enumerate(coefs)])
-
-    if (
-        substance.upper()
+        # PTM 1677-83
+        t_1000 = temperature / 1000
+        coefs = (
+            0.2521923,
+            -0.1186612,
+            0.3360775,
+            -0.3073812,
+            0.1382207,
+            -0.03090246,
+            0.002745383,
+        )
+        return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
+    elif (
+        substance
         in ("ЧИСТЫЙ ВЫХЛОП", "ЧИСТЫЙ_ВЫХЛОП", "CLEAN_EXHAUST", "CLEAN EXHAUST")
-        or substance.upper() in ("EXHAUST", "ВЫХЛОП")
+        or substance in ("EXHAUST", "ВЫХЛОП")
         and a_ox == 1
     ):
         """Чистая теплоемкость выхлопа"""
-        if fuel.upper() in (
+        if fuel in (
             "C2H8N2",
             "KEROSENE",
             "КЕРОСИН",
@@ -271,20 +273,23 @@ def Cp(substance: str, T=nan, P=nan, a_ox=nan, fuel: str = "", **kwargs) -> floa
             "PETROL",
             "БЕНЗИН",
         ):
-            return Cp_clean_kerosene(T)
+            return Cp_clean_kerosene(temperature)
         elif fuel.upper() in ("ДИЗЕЛЬ", "DIESEL"):
-            return Cp_clean_diesel(T)
+            return Cp_clean_diesel(temperature)
 
     if substance.upper() in ("EXHAUST", "ВЫХЛОП"):
         """Теплоемкость выхлопа"""
         if a_ox is not nan:
             return (
-                (1 + l_stoichiometry(fuel)) * Cp("EXHAUST", T=T, a_ox=1, fuel=fuel)
-                + (a_ox - 1) * l_stoichiometry(fuel) * Cp("AIR", T=T)
+                (1 + l_stoichiometry(fuel))
+                * Cp("EXHAUST", temperature=temperature, a_ox=1, fuel=fuel)
+                + (a_ox - 1)
+                * l_stoichiometry(fuel)
+                * Cp("AIR", temperature=temperature)
             ) / (1 + a_ox * l_stoichiometry(fuel))
         else:
             # PTM 1677-83
-            _T = T / 1000
+            t_1000 = temperature / 1000
             coefs = (
                 0.2079764,
                 1.211806,
@@ -294,11 +299,11 @@ def Cp(substance: str, T=nan, P=nan, a_ox=nan, fuel: str = "", **kwargs) -> floa
                 0.1574277,
                 -0.01518199,
             )
-            return 4187 * sum([coef * _T**i for i, coef in enumerate(coefs)])
+            return 4187 * sum([coef * t_1000**i for i, coef in enumerate(coefs)])
 
     if substance == "CO2":
         # PTM 1677-83
-        _T = T / 1000
+        t_1000 = temperature / 1000
         coefs = (
             0.1047056,
             0.4234367,
@@ -308,11 +313,11 @@ def Cp(substance: str, T=nan, P=nan, a_ox=nan, fuel: str = "", **kwargs) -> floa
             0.01462170,
             -0.001166819,
         )
-        return 4187 * sum([coef * _T**i for i, coef in enumerate(coefs)])
+        return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
 
     if substance == "H2O":
         # PTM 1677-83
-        _T = T / 1000
+        t_1000 = temperature / 1000
         coefs = (
             0.4489375,
             -0.1088401,
@@ -322,11 +327,11 @@ def Cp(substance: str, T=nan, P=nan, a_ox=nan, fuel: str = "", **kwargs) -> floa
             -0.0115716,
             0.0006241951,
         )
-        return 4187 * sum([coef * _T**i for i, coef in enumerate(coefs)])
+        return 4187 * sum([coef * t_1000**i for i, coef in enumerate(coefs)])
 
     if substance == "O2":
         # PTM 1677-83
-        _T = T / 1000
+        t_1000 = temperature / 1000
         coefs = (
             0.2083632,
             -0.0112279,
@@ -336,11 +341,11 @@ def Cp(substance: str, T=nan, P=nan, a_ox=nan, fuel: str = "", **kwargs) -> floa
             -0.03687021,
             0.003584204,
         )
-        return 4187 * sum([coef * _T**i for i, coef in enumerate(coefs)])
+        return 4187 * sum([coef * t_1000**i for i, coef in enumerate(coefs)])
 
     if substance == "H2":
         # PTM 1677-83
-        _T = T / 1000
+        t_1000 = temperature / 1000
         coefs = (
             3.070881,
             2.230734,
@@ -350,11 +355,11 @@ def Cp(substance: str, T=nan, P=nan, a_ox=nan, fuel: str = "", **kwargs) -> floa
             0.6851526,
             -0.06596988,
         )
-        return 4187 * sum([coef * _T**i for i, coef in enumerate(coefs)])
+        return 4187 * sum([coef * t_1000**i for i, coef in enumerate(coefs)])
 
     if substance == "N2":
         # https://www.highexpert.ru/content/gases/nitrogen.html
-        return 1041 - 0.021 * T + 0.0003814 * T**2
+        return 1041 - 0.021 * temperature + 0.0003814 * temperature**2
 
     if substance == "Ar":  # TODO
         return 523
@@ -364,15 +369,11 @@ def Cp(substance: str, T=nan, P=nan, a_ox=nan, fuel: str = "", **kwargs) -> floa
 
     if substance.upper() in ("C2H8N2", "KEROSENE", "TC-1", "КЕРОСИН", "ТС-1"):
         """Теплоемкость жидкого керосина"""
-        return Cp_kerosene(T)
+        return Cp_kerosene(temperature)
 
-    print(
-        Fore.RED
-        + f"Not found substance {substance} in function {Cp.__name__}"
-        + Fore.RESET
-    )
+    print(f"Not found substance {substance} in function {Cp.__name__}")
     return nan
-'''
+
 
 '''
 def Qa1(fuel) -> float:
