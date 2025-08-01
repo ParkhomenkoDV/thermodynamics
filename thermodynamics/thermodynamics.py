@@ -4,33 +4,54 @@ from scipy import integrate, interpolate
 
 from .parameters import parameters as tdp
 
-# import decorators
-
-# from tools import isnum, av, eps
-
-
 np.seterr(invalid="ignore")  # игнорирование ошибок с nan
 
 T0 = 273.15  # Абсолютный ноль температуры
 GAS_CONST = 8.314_462_618_153_24  # Универсальная газовая постоянная
 
 
-def gdf(parameter: str, λ: float = nan, k: float = nan) -> float:
+def gdf(
+    parameter: str,
+    equivalent_speed: float,
+    adiabatic_index: float = None,
+) -> float:
     """Газодинамические функции"""
-    if parameter in ("T", "τ"):
-        return 1 - λ**2 * ((k - 1) / (k + 1))
-    elif parameter in ("P", "π"):
-        return gdf("T", λ=λ, k=k) ** (k / (k - 1))
-    elif parameter in ("ρ", "ε"):
-        return gdf("T", λ=λ, k=k) ** (1 / (k - 1))
-    elif parameter in ("G", "q"):
-        return ((k + 1) / 2) ** (1 / (k - 1)) * λ * gdf("ρ", λ=λ, k=k)
-    elif parameter in ("p", "mv"):
-        return λ + 1 / λ
-    else:
-        raise ValueError(
-            'parameter not in ("T", "τ", "P", "π", "ρ", "ε", "G", "q", "p", "mv")'
+    assert isinstance(parameter, str), TypeError(f"type {parameter} must be str")
+    assert isinstance(equivalent_speed, (int, float, np.number)), TypeError(
+        f"type {equivalent_speed} must be numeric"
+    )
+    parameter = parameter.upper()
+    if parameter == "T":
+        assert isinstance(adiabatic_index, (int, float, np.number)), TypeError(
+            f"type {adiabatic_index} must be numeric"
         )
+        return 1 - equivalent_speed**2 * ((adiabatic_index - 1) / (adiabatic_index + 1))
+    elif parameter == "P":
+        return gdf(
+            "T",
+            equivalent_speed=equivalent_speed,
+            adiabatic_index=adiabatic_index,
+        ) ** (adiabatic_index / (adiabatic_index - 1))
+    elif parameter == "D":
+        return gdf(
+            "T",
+            equivalent_speed=equivalent_speed,
+            adiabatic_index=adiabatic_index,
+        ) ** (1 / (adiabatic_index - 1))
+    elif parameter in ("G", "MF"):
+        return (
+            ((adiabatic_index + 1) / 2) ** (1 / (adiabatic_index - 1))
+            * equivalent_speed
+            * gdf(
+                "D",
+                equivalent_speed=equivalent_speed,
+                adiabatic_index=adiabatic_index,
+            )
+        )
+    elif parameter in ("I", "MV"):
+        return equivalent_speed + 1 / equivalent_speed
+    else:
+        raise ValueError(f'{parameter} not in ("T", "P", "D", "G", "MF", "I", "MV")')
 
 
 def temperature_atmosphere_standard(height) -> tuple[float, str]:

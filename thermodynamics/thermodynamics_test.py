@@ -8,85 +8,121 @@ from .parameters import parameters as tdp
 
 
 class TestGDF:
-    """Тесты для функции gdf()"""
+    """Тесты для функции gas_dynamic_function()"""
 
-    # Тесты для параметра "T"
+    # Общие параметры для тестов
+    TEST_LAMBDA = 0.5
+    TEST_K = 1.4
+
+    # Тесты для параметра "T" (температура)
     def test_T_calculation(self):
-        """Проверка базового расчета для параметра 'T'"""
-        λ = 0.5
-        k = 1.4
-        expected = 1 - λ**2 * ((k - 1) / (k + 1))
-        assert isclose(gdf("T", λ=λ, k=k), expected)
+        expected = 1 - self.TEST_LAMBDA**2 * ((self.TEST_K - 1) / (self.TEST_K + 1))
+        result = gdf(
+            "T", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
+        )
+        assert isclose(result, expected)
 
     @pytest.mark.parametrize(
-        "λ, expected",
+        "lambda_val, expected",
         [
-            (0.0, 1.0),  # Граничное значение λ = 0
-            (1.0, 1 - 1**2 * ((1.4 - 1) / (1.4 + 1))),  # Граничное значение λ = 1
+            (0.0, 1.0),  # При λ=0 должно быть 1
+            (1.0, 1 - 1**2 * ((1.4 - 1) / (1.4 + 1))),  # Граничное значение λ=1
         ],
     )
-    def test_T_boundary_values(self, λ, expected):
-        """Проверка граничных значений для параметра 'T'"""
-        assert isclose(gdf("T", λ=λ, k=1.4), expected)
+    def test_T_boundary_values(self, lambda_val, expected):
+        result = gdf("T", equivalent_speed=lambda_val, adiabatic_index=1.4)
+        assert isclose(result, expected)
 
-    # Тесты для параметра "P"
+    # Тесты для параметра "P" (давление)
     def test_P_calculation(self):
-        """Проверка расчета для параметра 'P' через 'T'"""
-        λ = 0.5
-        k = 1.4
-        T_value = gdf("T", λ=λ, k=k)
-        expected_P = T_value ** (k / (k - 1))
-        assert isclose(gdf("P", λ=λ, k=k), expected_P)
+        T_value = gdf(
+            "T", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
+        )
+        expected = T_value ** (self.TEST_K / (self.TEST_K - 1))
+        result = gdf(
+            "P", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
+        )
+        assert isclose(result, expected)
 
-    # Тесты для параметра "ρ" (rho)
-    def test_rho_calculation(self):
-        """Проверка расчета для параметра 'ρ' через 'T'"""
-        λ = 0.5
-        k = 1.4
-        T_value = gdf("T", λ=λ, k=k)
-        expected_rho = T_value ** (1 / (k - 1))
-        assert isclose(gdf("ρ", λ=λ, k=k), expected_rho)
+    # Тесты для параметра "D" (плотность)
+    def test_D_calculation(self):
+        T_value = gdf(
+            "T", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
+        )
+        expected = T_value ** (1 / (self.TEST_K - 1))
+        result = gdf(
+            "D", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
+        )
+        assert isclose(result, expected)
 
-    # Тесты для параметра "G"
-    def test_G_calculation(self):
-        """Проверка расчета для параметра 'G' через 'ρ'"""
-        λ = 0.5
-        k = 1.4
-        rho_value = gdf("ρ", λ=λ, k=k)
-        expected_G = ((k + 1) / 2) ** (1 / (k - 1)) * λ * rho_value
-        assert isclose(gdf("G", λ=λ, k=k), expected_G)
+    # Тесты для параметров "G" и "MF" (массовый расход)
+    @pytest.mark.parametrize("param", ["G", "MF"])
+    def test_mass_flow_calculation(self, param):
+        D_value = gdf(
+            "D", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
+        )
+        expected = (
+            ((self.TEST_K + 1) / 2) ** (1 / (self.TEST_K - 1))
+            * self.TEST_LAMBDA
+            * D_value
+        )
+        result = gdf(
+            param, equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
+        )
+        assert isclose(result, expected)
 
-    # Тесты для параметра "p" (или "mv")
+    # Тесты для параметров "I" и "MV" (импульс)
     @pytest.mark.parametrize(
-        "λ, expected",
+        "param, lambda_val, expected",
         [
-            (1.0, 2.0),  # λ + 1/λ при λ=1 → 1 + 1 = 2
-            (2.0, 2.5),  # 2 + 0.5 = 2.5
-            (0.5, 2.5),  # 0.5 + 1/0.5 = 2.5
+            ("I", 1.0, 2.0),  # λ + 1/λ при λ=1 → 2
+            ("MV", 2.0, 2.5),  # 2 + 1/2 = 2.5
+            ("I", 0.5, 2.5),  # 0.5 + 1/0.5 = 2.5
         ],
     )
-    def test_p_calculation(self, λ, expected):
-        """Проверка расчета для параметра 'p'"""
-        assert isclose(gdf("p", λ=λ), expected)
+    def test_momentum_calculation(self, param, lambda_val, expected):
+        result = gdf(param, equivalent_speed=lambda_val)
+        assert isclose(result, expected)
 
     # Тесты на обработку ошибок
     def test_invalid_parameter(self):
-        """Проверка обработки некорректного параметра"""
         with pytest.raises(ValueError) as excinfo:
-            gdf("invalid_param")
-        assert "parameter not in" in str(excinfo.value)
+            gdf("invalid", equivalent_speed=0.5)
+        assert 'not in ("T", "P", "D", "G", "MF", "I", "MV")' in str(excinfo.value)
 
-    # Тесты на обработку nan значений
-    @pytest.mark.parametrize(
-        "param, kwargs",
-        [
-            ("T", {"λ": np.nan, "k": 1.4}),
-            ("T", {"λ": 0.5, "k": np.nan}),
-        ],
-    )
-    def test_nan_values(self, param, kwargs):
-        """Проверка обработки nan значений"""
-        assert isnan(gdf(param, **kwargs))
+    def test_non_numeric_lambda(self):
+        with pytest.raises((AssertionError, TypeError)):
+            gdf("T", equivalent_speed="not_a_number", adiabatic_index=1.4)
+
+    def test_non_numeric_k_for_T(self):
+        with pytest.raises((AssertionError, TypeError)):
+            gdf("T", equivalent_speed=0.5, adiabatic_index="not_a_number")
+
+    def test_missing_k_for_T(self):
+        with pytest.raises((AssertionError, TypeError)):
+            gdf("T", equivalent_speed=0.5)
+
+    # Тесты на обработку специальных значений
+    def test_nan_lambda(self):
+        assert isnan(gdf("T", equivalent_speed=np.nan, adiabatic_index=1.4))
+
+    def test_nan_k(self):
+        assert isnan(gdf("T", equivalent_speed=0.5, adiabatic_index=np.nan))
+
+    # Тесты на регистронезависимость
+    def test_case_insensitivity(self):
+        assert gdf("t", equivalent_speed=0.5, adiabatic_index=1.4) == gdf(
+            "T", equivalent_speed=0.5, adiabatic_index=1.4
+        )
+        assert gdf("g", equivalent_speed=0.5, adiabatic_index=1.4) == gdf(
+            "G", equivalent_speed=0.5, adiabatic_index=1.4
+        )
+
+    # Тест на очень большое значение λ
+    def test_large_lambda(self):
+        """Проверка, что функция не ломается на больших λ"""
+        result = gdf("I", equivalent_speed=1e6)
+        assert isclose(result, 1e6 + 1e-6)  # λ + 1/λ ≈ λ при больших λ
 
 
 class TestAtmosphereStandard:
