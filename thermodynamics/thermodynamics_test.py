@@ -7,35 +7,86 @@ from thermodynamics import *
 from .parameters import parameters as tdp
 
 
-def test_gdf():
-    # Проверяем корректный расчет для λ и k
-    assert isclose(gdf("T", λ=0.5, k=1.4), 1 - 0.5**2 * ((1.4 - 1) / (1.4 + 1)))
-    # Проверяем граничное значение λ = 0
-    assert gdf("T", λ=0, k=1.4) == 1.0
-    # Проверяем граничное значение λ = 1
-    assert isclose(gdf("T", λ=1, k=1.4), 1 - 1**2 * ((1.4 - 1) / (1.4 + 1)))
-    # Проверяем корректный расчет через T
-    T_value = gdf("T", λ=0.5, k=1.4)
-    expected_P = T_value ** (1.4 / (1.4 - 1))
-    assert isclose(gdf("P", λ=0.5, k=1.4), expected_P)
-    # Проверяем корректный расчет через T
-    T_value = gdf("T", λ=0.5, k=1.4)
-    expected_rho = T_value ** (1 / (1.4 - 1))
-    assert isclose(gdf("ρ", λ=0.5, k=1.4), expected_rho)
-    # Проверяем корректный расчет через ρ
-    rho_value = gdf("ρ", λ=0.5, k=1.4)
-    expected_G = ((1.4 + 1) / 2) ** (1 / (1.4 - 1)) * 0.5 * rho_value
-    assert isclose(gdf("G", λ=0.5, k=1.4), expected_G)
+class TestGDF:
+    """Тесты для функции gdf()"""
+
+    # Тесты для параметра "T"
+    def test_T_calculation(self):
+        """Проверка базового расчета для параметра 'T'"""
+        λ = 0.5
+        k = 1.4
+        expected = 1 - λ**2 * ((k - 1) / (k + 1))
+        assert isclose(gdf("T", λ=λ, k=k), expected)
+
+    @pytest.mark.parametrize(
+        "λ, expected",
+        [
+            (0.0, 1.0),  # Граничное значение λ = 0
+            (1.0, 1 - 1**2 * ((1.4 - 1) / (1.4 + 1))),  # Граничное значение λ = 1
+        ],
+    )
+    def test_T_boundary_values(self, λ, expected):
+        """Проверка граничных значений для параметра 'T'"""
+        assert isclose(gdf("T", λ=λ, k=1.4), expected)
+
+    # Тесты для параметра "P"
+    def test_P_calculation(self):
+        """Проверка расчета для параметра 'P' через 'T'"""
+        λ = 0.5
+        k = 1.4
+        T_value = gdf("T", λ=λ, k=k)
+        expected_P = T_value ** (k / (k - 1))
+        assert isclose(gdf("P", λ=λ, k=k), expected_P)
+
+    # Тесты для параметра "ρ" (rho)
+    def test_rho_calculation(self):
+        """Проверка расчета для параметра 'ρ' через 'T'"""
+        λ = 0.5
+        k = 1.4
+        T_value = gdf("T", λ=λ, k=k)
+        expected_rho = T_value ** (1 / (k - 1))
+        assert isclose(gdf("ρ", λ=λ, k=k), expected_rho)
+
+    # Тесты для параметра "G"
+    def test_G_calculation(self):
+        """Проверка расчета для параметра 'G' через 'ρ'"""
+        λ = 0.5
+        k = 1.4
+        rho_value = gdf("ρ", λ=λ, k=k)
+        expected_G = ((k + 1) / 2) ** (1 / (k - 1)) * λ * rho_value
+        assert isclose(gdf("G", λ=λ, k=k), expected_G)
+
     # Тесты для параметра "p" (или "mv")
-    assert gdf("p", λ=1.0) == 2.0  # λ + 1/λ при λ=1 → 1 + 1 = 2
-    assert gdf("p", λ=2.0) == 2.5  # 2 + 0.5 = 2.5
-    # Тест на обработку некорректного параметра
-    with pytest.raises(Exception) as excinfo:
-        gdf("invalid_param")
-    assert "parameter not in" in str(excinfo.value)
-    # Тест на обработку nan значений (если требуется)
-    assert isnan(gdf("T", λ=nan, k=1.4))
-    assert isnan(gdf("T", λ=0.5, k=nan))
+    @pytest.mark.parametrize(
+        "λ, expected",
+        [
+            (1.0, 2.0),  # λ + 1/λ при λ=1 → 1 + 1 = 2
+            (2.0, 2.5),  # 2 + 0.5 = 2.5
+            (0.5, 2.5),  # 0.5 + 1/0.5 = 2.5
+        ],
+    )
+    def test_p_calculation(self, λ, expected):
+        """Проверка расчета для параметра 'p'"""
+        assert isclose(gdf("p", λ=λ), expected)
+
+    # Тесты на обработку ошибок
+    def test_invalid_parameter(self):
+        """Проверка обработки некорректного параметра"""
+        with pytest.raises(ValueError) as excinfo:
+            gdf("invalid_param")
+        assert "parameter not in" in str(excinfo.value)
+
+    # Тесты на обработку nan значений
+    @pytest.mark.parametrize(
+        "param, kwargs",
+        [
+            ("T", {"λ": np.nan, "k": 1.4}),
+            ("T", {"λ": 0.5, "k": np.nan}),
+        ],
+    )
+    def test_nan_values(self, param, kwargs):
+        """Проверка обработки nan значений"""
+        assert isnan(gdf(param, **kwargs))
 
 
 class TestAtmosphereStandard:
@@ -166,3 +217,86 @@ class TestAdiabaticIndex:
         """Проверка что возвращается float"""
         result = adiabatic_index(287.0, 1005.0)
         assert isinstance(result, float)
+
+
+class TestGasConst:
+    """Тесты для функции gas_const()"""
+
+    # Тесты для воздуха
+    def test_air_english(self):
+        assert gas_const("air") == 287.14
+
+    def test_air_russian(self):
+        assert gas_const("ВОЗДУХ") == 287.14
+
+    def test_air_case_insensitive(self):
+        assert gas_const("AiR") == 287.14
+
+    # Тесты для продуктов сгорания (EXHAUST)
+    @pytest.mark.parametrize(
+        "fuel, alpha, expected",
+        [
+            ("C2H8N2", 1.0, 288.88712718),
+            ("kerosene", 2.0, 288.54104318),
+            ("КЕРОСИН", 5.0, 288.33373438),
+            ("T1", 1.0, 287.971694324),
+            ("РЕАКТИВНОЕ ТОПЛИВО", 2.0, 288.078848932),
+            ("TC-1", 1.0, 288.386957775),
+            ("ТС1", 5.0, 288.22958048),
+            ("DIESEL", 1.0, 287.365782577),
+            ("ДТ", 2.0, 287.7725053385),
+            ("SOLAR", 1.0, 286.740658766),
+            ("СОЛЯРКА", 5.0, 287.8864998532),
+            ("MAZUT", 1.0, 285.909107708),
+            ("ПРИРОДНЫЙ ГАЗ", 1.0, 302.23684704),
+            ("КОКСОВЫЙ ГАЗ", 1.0, 308.63228928),
+            ("BIOGAS", 1.0, 292.107038145),
+        ],
+    )
+    def test_exhaust_with_valid_fuels(self, fuel, alpha, expected):
+        assert gas_const("exhaust", excess_oxidizing=alpha, fuel=fuel) == pytest.approx(
+            expected
+        )
+
+    # Тесты на ошибки
+    def test_invalid_substance(self):
+        with pytest.raises(ValueError):
+            gas_const("invalid_substance")
+
+    def test_exhaust_without_fuel(self):
+        with pytest.raises(ValueError):
+            gas_const("exhaust")
+
+    def test_invalid_fuel(self):
+        with pytest.raises(ValueError):
+            gas_const("exhaust", excess_oxidizing=1.0, fuel="invalid_fuel")
+
+    def test_non_numeric_alpha(self):
+        with pytest.raises(TypeError):
+            gas_const("exhaust", excess_oxidizing="not_a_number", fuel="kerosene")
+
+    def test_negative_alpha(self):
+        with pytest.raises((AssertionError, ValueError)):
+            gas_const("exhaust", excess_oxidizing=-1.0, fuel="kerosene")
+
+    def test_zero_alpha(self):
+        with pytest.raises((AssertionError, ValueError)):
+            gas_const("exhaust", excess_oxidizing=0.0, fuel="kerosene")
+
+    def test_nan_alpha(self):
+        with pytest.raises((AssertionError, ValueError)):
+            gas_const("exhaust", excess_oxidizing=np.nan, fuel="kerosene")
+
+    # Тесты на типы аргументов
+    def test_non_string_substance(self):
+        with pytest.raises((AssertionError, ValueError)):
+            gas_const(123)
+
+    def test_non_string_fuel(self):
+        with pytest.raises((AssertionError, ValueError)):
+            gas_const("exhaust", excess_oxidizing=1.0, fuel=123)
+
+    def test_very_large_alpha(self):
+        # Проверяем что не возникает ошибок при большом alpha
+        result = gas_const("exhaust", excess_oxidizing=1e10, fuel="kerosene")
+        assert result == pytest.approx(288.1954313)  # Второе слагаемое стремится к 0

@@ -28,7 +28,7 @@ def gdf(parameter: str, λ: float = nan, k: float = nan) -> float:
     elif parameter in ("p", "mv"):
         return λ + 1 / λ
     else:
-        raise Exception(
+        raise ValueError(
             'parameter not in ("T", "τ", "P", "π", "ρ", "ε", "G", "q", "p", "mv")'
         )
 
@@ -106,21 +106,28 @@ def adiabatic_index(gas_const: float, cp: float) -> float:
     return cp / (cp - gas_const)
 
 
-'''
-def gas_const(substance, a_ox=nan, fuel="", **kwargs) -> float:
+def gas_const(substance: str, excess_oxidizing=nan, fuel: str = "") -> float:
     """Газовая постоянная [Дж/кг/К]"""
-    if substance.upper() in ("AIR", "ВОЗДУХ"):
+    assert isinstance(substance, str), TypeError(f"type {substance} must be str")
+    substance = substance.upper()
+    if substance in ("AIR", "ВОЗДУХ"):
         """Газовая постоянная воздуха"""
         return 287.14
-    elif substance.upper() in ("EXHAUST", "ВЫХЛОП") and a_ox is not nan and fuel != "":
+    elif substance in ("EXHAUST", "ВЫХЛОП") and fuel != "":
         """Газовая постоянная продуктов сгорания"""
-        if fuel.upper() in ("C2H8N2", "KEROSENE", "КЕРОСИН"):
-            return 288.1954313 + 0.691695880 / a_ox
-        if fuel.upper() in ("T1", "Т1", "РЕАКТИВНОЕ ТОПЛИВО"):
-            return 288.1856907 - 0.213996376 / a_ox
-        if fuel.upper() in ("TC1", "ТС-1", "ТС1", "TC-1"):
-            return 288.1901130 + 0.196844775 / a_ox
-        if fuel.upper() in (
+        assert isinstance(excess_oxidizing, (int, float, np.number)) or not isnan(
+            excess_oxidizing
+        ), TypeError(f"type {excess_oxidizing} must be numeric")
+        assert excess_oxidizing > 0, ValueError(f"{excess_oxidizing} must be > 0")
+        assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
+        fuel = fuel.upper()
+        if fuel in ("C2H8N2", "KEROSENE", "КЕРОСИН"):
+            return 288.1954313 + 0.691695880 / excess_oxidizing
+        elif fuel in ("T1", "Т1", "РЕАКТИВНОЕ ТОПЛИВО"):
+            return 288.1856907 - 0.213996376 / excess_oxidizing
+        elif fuel.upper() in ("TC1", "ТС-1", "ТС1", "TC-1"):
+            return 288.1901130 + 0.196844775 / excess_oxidizing
+        elif fuel in (
             "DIESEL",
             "DT",
             "ДИЗЕЛЬ",
@@ -128,8 +135,8 @@ def gas_const(substance, a_ox=nan, fuel="", **kwargs) -> float:
             "ДИЗЕЛЬНОЕ ТОПЛИВО",
             "ДИЗЕЛЬНОЕ_ТОПЛИВО",
         ):
-            return 288.1792281 - 0.813445523 / a_ox
-        if fuel.upper() in (
+            return 288.1792281 - 0.813445523 / excess_oxidizing
+        elif fuel in (
             "SOLAR",
             "SOLAR OIL",
             "SOLAR_OIL",
@@ -137,21 +144,20 @@ def gas_const(substance, a_ox=nan, fuel="", **kwargs) -> float:
             "СОЛЯРОВОЕ МАСЛО",
             "СОЛЯРОВОЕ_МАСЛО",
         ):
-            return 288.1729604 - 1.432301634 / a_ox
-        if fuel.upper() in ("MAZUT", "МАЗУТ", "Ф12"):
-            return 288.1635509 - 2.254443192 / a_ox
-        if fuel.upper() in ("ПРИРОДНЫЙ ГАЗ", "ПРИРОДНЫЙ_ГАЗ"):
-            return 290.0288864 + 12.207960640 / a_ox
-        if fuel.upper() in ("КОКСОВЫЙ ГАЗ", "КОКСОВЫЙ_ГАЗ"):
-            return 288.4860344 + 20.146254880 / a_ox
-        if fuel.upper() in ("BIOGAS", "БИОГАЗ"):
-            return 289.9681764 + 2.138861745 / a_ox
+            return 288.1729604 - 1.432301634 / excess_oxidizing
+        elif fuel in ("MAZUT", "МАЗУТ", "Ф12"):
+            return 288.1635509 - 2.254443192 / excess_oxidizing
+        elif fuel in ("ПРИРОДНЫЙ ГАЗ", "ПРИРОДНЫЙ_ГАЗ"):
+            return 290.0288864 + 12.207960640 / excess_oxidizing
+        elif fuel in ("КОКСОВЫЙ ГАЗ", "КОКСОВЫЙ_ГАЗ"):
+            return 288.4860344 + 20.146254880 / excess_oxidizing
+        elif fuel in ("BIOGAS", "БИОГАЗ"):
+            return 289.9681764 + 2.138861745 / excess_oxidizing
+        else:
+            raise ValueError(f"{fuel} not found")
     else:
-        print(
-            Fore.RED + f"fuel not found! in function {gas_const.__name__}" + Fore.RESET
-        )
-        return nan
-'''
+        raise ValueError(f"{substance} not found")
+
 
 '''
 def l_stoichiometry(fuel: str) -> float:
