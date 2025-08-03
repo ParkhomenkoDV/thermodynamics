@@ -534,10 +534,11 @@ def heat_capacity_at_constant_pressure(
         raise ValueError(f"{substance} not found")
 
 
-'''
-def Qa1(fuel) -> float:
+def lower_heating_value(fuel: str) -> float:
     """Низшая теплота сгорания горючего при коэффициенте избытка окислителя = 1"""
-    if fuel.upper() in (
+    assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
+    fuel = fuel.upper()
+    if fuel in (
         "C2H8N2",
         "KEROSENE",
         "TC1",
@@ -548,21 +549,17 @@ def Qa1(fuel) -> float:
         "ТС-1",
         "БЕНЗИН",
     ):
-        return 0.5 * (43_600 + 42_700) * 1000
-    elif fuel.upper() in ("T-6", "T-8", "Т-6", "Т-8"):
-        return 42_900 * 1000
-    elif fuel.upper in ("ДИЗЕЛЬ", "DIESEL"):
+        return 0.5 * (43_600_000 + 42_700_000)
+    elif fuel in ("T-6", "T-8", "Т-6", "Т-8"):
+        return 42_900_000
+    elif fuel in ("ДИЗЕЛЬ", "DIESEL"):
         return nan
-    elif fuel.upper in ("ПРИРОДНЫЙ ГАЗ", "ПРИРОДНЫЙ_ГАЗ"):
+    elif fuel in ("ПРИРОДНЫЙ ГАЗ",):
         return nan
-    elif fuel.upper in ("КОКСОВЫЙ ГАЗ", "КОКСОВЫЙ_ГАЗ"):
+    elif fuel in ("КОКСОВЫЙ ГАЗ",):
         return nan
     else:
-        print(
-            Fore.RED + "not found fuel!" + " in function " + Qa1.__name__ + Fore.RESET
-        )
-        return nan
-'''
+        raise ValueError(f"{fuel} not found")
 
 
 def dynamic_exhaust_viscosity(temperature=nan, a_ox=nan) -> float:
