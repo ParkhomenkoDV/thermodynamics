@@ -157,7 +157,7 @@ class TestAtmosphereStandard:
         """Тест структуры возвращаемого словаря"""
         result = atmosphere_standard(5000)
         assert isinstance(result, dict)
-        assert set(result.keys()) == {tdp.T, tdp.P}
+        assert set(result.keys()) == {tdp.t, tdp.p}
         assert all(isinstance(v, tuple) and len(v) == 2 for v in result.values())
 
     @pytest.mark.parametrize("height", [0, 5000, 11000, 20000])
@@ -167,8 +167,8 @@ class TestAtmosphereStandard:
         temp_func, _ = temperature_atmosphere_standard(height)
         pres_func, _ = pressure_atmosphere_standard(height)
 
-        assert result[tdp.T][0] == pytest.approx(temp_func)
-        assert result[tdp.P][0] == pytest.approx(pres_func)
+        assert result[tdp.t][0] == pytest.approx(temp_func)
+        assert result[tdp.p][0] == pytest.approx(pres_func)
 
     def test_edge_cases(self):
         """Тест граничных случаев и исключений"""

@@ -1,3 +1,3 @@
 # thermodynamics
 
-it is a lib with physics functions 
+It is a lib with physics functions 

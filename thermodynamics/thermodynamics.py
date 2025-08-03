@@ -1,10 +1,13 @@
 import numpy as np
-import pandas as pd
 from numpy import isnan, log, nan
-from parameters import parameters as tdp
 from scipy import integrate, interpolate
 
-np.seterr(invalid="ignore")  # игнорирование ошибок с nan
+try:
+    from .parameters import parameters as tdp  # Попытка относительного импорта
+except ImportError:
+    from parameters import parameters as tdp  # Резервный абсолютный импорт
+
+np.seterr(invalid="ignore")  # игнорирование nan ошибок
 
 T0 = 273.15  # Абсолютный ноль температуры
 GAS_CONST = 8.314_462_618_153_24  # Универсальная газовая постоянная
@@ -71,8 +74,8 @@ def pressure_atmosphere_standard(height) -> tuple[float, str]:
 def atmosphere_standard(height: int | float) -> dict[str : tuple[float, str]]:
     """Атмосфера стандартная ГОСТ 4401-81"""
     return {
-        tdp.T: temperature_atmosphere_standard(height),
-        tdp.P: pressure_atmosphere_standard(height),
+        tdp.t: temperature_atmosphere_standard(height),
+        tdp.p: pressure_atmosphere_standard(height),
     }
 
 
