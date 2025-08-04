@@ -134,11 +134,11 @@ def adiabatic_index(gas_const: int | float, cp: int | float) -> float:
 def gas_const(substance: str, excess_oxidizing=nan, fuel: str = "") -> float:
     """Газовая постоянная [Дж/кг/К]"""
     assert isinstance(substance, str), TypeError(f"type {substance} must be str")
-    substance = substance.upper()
-    if substance in ("AIR", "ВОЗДУХ"):
+
+    if substance.upper() == "AIR":
         """Газовая постоянная воздуха"""
         return 287.14
-    elif substance in ("EXHAUST", "ВЫХЛОП") and fuel != "":
+    elif substance.upper() == "EXHAUST":
         """Газовая постоянная продуктов сгорания"""
         assert isinstance(excess_oxidizing, (int, float, np.number)) or not isnan(
             excess_oxidizing
@@ -146,37 +146,23 @@ def gas_const(substance: str, excess_oxidizing=nan, fuel: str = "") -> float:
         assert excess_oxidizing > 0, ValueError(f"{excess_oxidizing} must be > 0")
         assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
         fuel = fuel.upper()
-        if fuel in ("C2H8N2", "KEROSENE", "КЕРОСИН"):
+        if fuel in ("C2H8N2", "KEROSENE"):
             return 288.1954313 + 0.691695880 / excess_oxidizing
         elif fuel in ("T1", "Т1", "РЕАКТИВНОЕ ТОПЛИВО"):
             return 288.1856907 - 0.213996376 / excess_oxidizing
-        elif fuel.upper() in ("TC1", "ТС-1", "ТС1", "TC-1"):
+        elif fuel.upper() in ("TC1", "TC-1"):
             return 288.1901130 + 0.196844775 / excess_oxidizing
-        elif fuel in (
-            "DIESEL",
-            "DT",
-            "ДИЗЕЛЬ",
-            "ДТ",
-            "ДИЗЕЛЬНОЕ ТОПЛИВО",
-            "ДИЗЕЛЬНОЕ_ТОПЛИВО",
-        ):
+        elif fuel == "DIESEL":
             return 288.1792281 - 0.813445523 / excess_oxidizing
-        elif fuel in (
-            "SOLAR",
-            "SOLAR OIL",
-            "SOLAR_OIL",
-            "СОЛЯРКА",
-            "СОЛЯРОВОЕ МАСЛО",
-            "СОЛЯРОВОЕ_МАСЛО",
-        ):
+        elif fuel in ("SOLAR", "SOLAR OIL", "SOLAR_OIL"):
             return 288.1729604 - 1.432301634 / excess_oxidizing
-        elif fuel in ("MAZUT", "МАЗУТ", "Ф12"):
+        elif fuel == "MAZUT":
             return 288.1635509 - 2.254443192 / excess_oxidizing
         elif fuel in ("ПРИРОДНЫЙ ГАЗ", "ПРИРОДНЫЙ_ГАЗ"):
             return 290.0288864 + 12.207960640 / excess_oxidizing
         elif fuel in ("КОКСОВЫЙ ГАЗ", "КОКСОВЫЙ_ГАЗ"):
             return 288.4860344 + 20.146254880 / excess_oxidizing
-        elif fuel in ("BIOGAS", "БИОГАЗ"):
+        elif fuel == "BIOGAS":
             return 289.9681764 + 2.138861745 / excess_oxidizing
         else:
             raise ValueError(f"{fuel} not found")
@@ -214,7 +200,7 @@ def stoichiometry(fuel: str) -> float:
         "T-1",
         "T-2",
         "TC-1",
-        "ТС1",
+        "TC1",
     ):
         return 14.61
     elif fuel in ("PETROL", "GASOLINE"):
@@ -426,7 +412,7 @@ def heat_capacity_at_constant_pressure(
     )
     assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
 
-    if substance.upper() in ("AIR", "ВОЗДУХ"):
+    if substance.upper() == "AIR":
         """Теплоемкость воздуха [PTM 1677-83]"""
         t_1000 = temperature / 1000
         coefs = (
@@ -439,15 +425,10 @@ def heat_capacity_at_constant_pressure(
             0.002745383,
         )
         return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
-    elif substance.upper() in ("EXHAUST", "ВЫХЛОП"):
+    elif substance.upper() == "EXHAUST":
         """Теплоемкость выхлопа"""
         if excess_oxidizing == 1:
-            if fuel.upper() in (
-                "C2H8N2",
-                "KEROSENE",
-                "ТС-1",
-                "PETROL",
-            ):
+            if fuel.upper() in ("C2H8N2", "KEROSENE", "TC-1", "PETROL"):
                 return cp_clean_kerosene(temperature)
             elif fuel.upper() == "DIESEL":
                 return cp_clean_diesel(temperature)
@@ -551,21 +532,11 @@ def lower_heating_value(fuel: str) -> float:
     """Низшая теплота сгорания горючего при коэффициенте избытка окислителя = 1"""
     assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
     fuel = fuel.upper()
-    if fuel in (
-        "C2H8N2",
-        "KEROSENE",
-        "TC1",
-        "TC-1",
-        "PETROL",
-        "КЕРОСИН",
-        "ТС1",
-        "ТС-1",
-        "БЕНЗИН",
-    ):
+    if fuel in ("C2H8N2", "KEROSENE", "TC1", "TC-1", "PETROL"):
         return 0.5 * (43_600_000 + 42_700_000)
-    elif fuel in ("T-6", "T-8", "Т-6", "Т-8"):
+    elif fuel in ("T-6", "T-8"):
         return 42_900_000
-    elif fuel in ("ДИЗЕЛЬ", "DIESEL"):
+    elif fuel == "DIESEL":
         return nan
     elif fuel in ("ПРИРОДНЫЙ ГАЗ",):
         return nan
@@ -625,6 +596,9 @@ def dynamic_viscosity(
 def thermal_conductivity(substance: str, temperature: int | float | np.number) -> float:
     """Теплопроводность (Вт/м/К)"""
     assert isinstance(substance, str), TypeError(f"type {substance} must be str")
+    assert isinstance(temperature, (int, float, np.number)), TypeError(
+        f"type {temperature} must be numeric"
+    )
 
     if substance == "N2":
         return 241.9 / 10**4 * (temperature / T0) ** 0.8
