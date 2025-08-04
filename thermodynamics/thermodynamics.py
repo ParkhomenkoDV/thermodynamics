@@ -590,7 +590,7 @@ def dynamic_viscosity(
     temperature: int | float | np.number,
     excess_oxidizing: int | float | np.number = nan,
 ) -> float:
-    """Динамическая вязкость"""
+    """Динамическая вязкость (Па*с)"""
     assert isinstance(substance, str), TypeError(f"type {substance} must be str")
     assert isinstance(temperature, (int, float, np.number)), TypeError(
         f"type {temperature} must be numeric"
@@ -628,6 +628,36 @@ def dynamic_viscosity(
         return 29.71 / 10**6 * (temperature / T0) ** 0.65
     elif substance == "CO2":
         return 13.65 / 10**6 * (temperature / T0) ** 0.82
+    else:
+        raise ValueError(f"{substance} not found")
+
+
+def thermal_conductivity(substance: str, temperature: int | float | np.number) -> float:
+    """Теплопроводность (Вт/м/К)"""
+    assert isinstance(substance, str), TypeError(f"type {substance} must be str")
+
+    if substance == "N2":
+        return 241.9 / 10**4 * (temperature / T0) ** 0.8
+    elif substance == "NH3":
+        return 212 / 10**4 * (temperature / T0) ** 1.53
+    elif substance == "Ar":
+        return 165.1 / 10**4 * (temperature / T0) ** 0.8
+    elif substance == "H2":
+        return 1721.2 / 10**4 * (temperature / T0) ** 0.78
+    elif substance.upper() == "AIR":
+        return 244.2 / 10**4 * (temperature / T0) ** 0.82
+    elif substance == "He":
+        return 1425.8 / 10**4 * (temperature / T0) ** 0.73
+    elif substance == "O2":
+        return 245.4 / 10**4 * (temperature / T0) ** 0.87
+    elif substance == "Kr":
+        return 88.9 / 10**4 * (temperature / T0) ** 0.86
+    elif substance == "Xe":
+        return 52.3 / 10**4 * (temperature / T0) ** 0.91
+    elif substance == "Ne":
+        return 464 / 10**4 * (temperature / T0) ** 0.71
+    elif substance == "CO2":
+        return 147 / 10**4 * (temperature / T0) ** 1.23
     else:
         raise ValueError(f"{substance} not found")
 

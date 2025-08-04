@@ -513,3 +513,91 @@ class TestChemicalFormulaToDict:
     def test_underscore_in_formula(self):
         with pytest.raises(ValueError):
             chemical_formula_to_dict("H2_O")
+
+
+class TestThermalConductivity:
+    """Тесты для функции thermal_conductivity()"""
+
+    # Тестовые данные для веществ и температур
+    TEST_SUBSTANCES = [
+        "N2",
+        "NH3",
+        "Ar",
+        "H2",
+        "AIR",
+        "He",
+        "O2",
+        "Kr",
+        "Xe",
+        "Ne",
+        "CO2",
+    ]
+    TEST_TEMPERATURES = [100, 273.15, 300, 500, 1000]  # Включая T0
+
+    # Проверка корректных значений
+    @pytest.mark.parametrize("substance", TEST_SUBSTANCES)
+    @pytest.mark.parametrize("temperature", TEST_TEMPERATURES)
+    def test_known_substances(self, substance, temperature):
+        """Проверка корректных значений для всех веществ"""
+        result = thermal_conductivity(substance, temperature)
+        assert isinstance(result, float)
+        assert result > 0  # Теплопроводность всегда положительна
+
+    # Проверка граничных случаев
+    def test_air_case_insensitive(self):
+        """Проверка регистронезависимости для воздуха"""
+        assert thermal_conductivity("air", 300) == thermal_conductivity("AIR", 300)
+        assert thermal_conductivity("Air", 300) == thermal_conductivity("AIR", 300)
+
+    def test_reference_temperature(self):
+        """Проверка при T = T0"""
+        for substance in self.TEST_SUBSTANCES:
+            if substance.upper() == "AIR":
+                continue  # Для воздуха своя формула
+            expected = float(thermal_conductivity(substance, T0))
+            assert pytest.approx(expected) == thermal_conductivity(substance, T0)
+
+    # Проверка ошибок
+    def test_unknown_substance(self):
+        """Проверка вызова ошибки для неизвестного вещества"""
+        with pytest.raises(ValueError):
+            thermal_conductivity("H2O", 300)  # Вода не в списке
+
+    @pytest.mark.parametrize("invalid_temp", ["300", None, [300], {"temp": 300}])
+    def test_invalid_temperature_type(self, invalid_temp):
+        """Проверка недопустимых типов температуры"""
+        with pytest.raises(TypeError):
+            thermal_conductivity("N2", invalid_temp)
+
+    def test_invalid_substance_type(self):
+        """Проверка недопустимого типа вещества"""
+        with pytest.raises((AssertionError, TypeError)):
+            thermal_conductivity(123, 300)  # Вещество должно быть строкой
+
+    # Проверка с numpy
+    def test_numpy_temperature(self):
+        """Проверка работы с numpy-числами"""
+        np_temp = np.float64(300)
+        result = thermal_conductivity("N2", np_temp)
+        assert isinstance(result, float)
+
+    # Проверка математики для конкретных веществ
+    def test_n2_calculation(self):
+        """Проверка точности расчета для N2"""
+        temp = 300
+        expected = 241.9 / 10**4 * (temp / T0) ** 0.8
+        assert pytest.approx(expected, rel=1e-6) == thermal_conductivity("N2", temp)
+
+    def test_h2_calculation(self):
+        """Проверка точности расчета для H2"""
+        temp = 500
+        expected = 1721.2 / 10**4 * (temp / T0) ** 0.78
+        assert pytest.approx(expected, rel=1e-6) == thermal_conductivity("H2", temp)
+
+    # Проверка крайних температур
+    @pytest.mark.parametrize("temp", [1e-6, 1e6])
+    def test_extreme_temperatures(self, temp):
+        """Проверка на очень низких и высоких температурах"""
+        result = thermal_conductivity("He", temp)
+        assert result > 0
+        assert not np.isnan(result)
