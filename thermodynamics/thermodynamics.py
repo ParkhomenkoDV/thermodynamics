@@ -565,11 +565,51 @@ def lower_heating_value(fuel: str) -> float:
         raise ValueError(f"{fuel} not found")
 
 
-def dynamic_exhaust_viscosity(temperature=nan, a_ox=nan) -> float:
+def dynamic_viscosity(
+    substance: str,
+    temperature: int | float | np.number,
+    excess_oxidizing: int | float | np.number = nan,
+) -> float:
     """Динамическая вязкость"""
-    coefs = (+0.505, +4.849, -1.333, +0.229)
-    t = temperature / 1_000
-    return 10 ** (-5) * (sum(coefs[i] * t**i for i in range(len(coefs))) - 0.275 / a_ox)
+    assert isinstance(substance, str), TypeError(f"type {substance} must be str")
+    assert isinstance(temperature, (int, float, np.number)), TypeError(
+        f"type {temperature} must be numeric"
+    )
+
+    if substance.upper() in ("EXHAUST", "ВЫХЛОП"):
+        assert not isnan(excess_oxidizing), ValueError(
+            f"{excess_oxidizing} must be numeric"
+        )
+        coefs = (+0.505, +4.849, -1.333, +0.229)
+        t_1000 = temperature / 1_000
+        return 10 ** (-5) * (
+            sum(coef * t_1000**i for i, coef in enumerate(coefs))
+            - 0.275 / excess_oxidizing
+        )
+    elif substance == "N2":
+        return 16.67 / 10**6 * (temperature / T0) ** 0.68
+    elif substance == "NH3":
+        return 9.7 / 10**6 * (temperature / T0) ** 1.06
+    elif substance == "Ar":
+        return 21.08 / 10**6 * (temperature / T0) ** 0.72
+    elif substance == "H2":
+        return 8.36 / 10**6 * (temperature / T0) ** 0.68
+    elif substance.upper() == "AIR":
+        return 17.16 / 10**6 * (temperature / T0) ** 0.68
+    elif substance == "He":
+        return 18.64 / 10**6 * (temperature / T0) ** 0.68
+    elif substance == "O2":
+        return 19.42 / 10**6 * (temperature / T0) ** 0.69
+    elif substance == "Kr":
+        return 23.44 / 10**6 * (temperature / T0) ** 0.83
+    elif substance == "Xe":
+        return 21.08 / 10**6 * (temperature / T0) ** 0.89
+    elif substance == "Ne":
+        return 29.71 / 10**6 * (temperature / T0) ** 0.65
+    elif substance == "CO2":
+        return 13.65 / 10**6 * (temperature / T0) ** 0.82
+    else:
+        raise ValueError(f"{substance} not found")
 
 
 def g_cool_ciam(temperature_input, temperature_output, temperature_lim) -> float:
