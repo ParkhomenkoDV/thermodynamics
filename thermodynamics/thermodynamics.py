@@ -1,6 +1,6 @@
 import numpy as np
 from numpy import isnan, log, nan
-from scipy import integrate, interpolate
+from scipy import interpolate
 
 try:
     from .parameters import parameters as tdp  # Попытка относительного импорта
@@ -179,6 +179,26 @@ def gas_const(substance: str, excess_oxidizing=nan, fuel: str = "") -> float:
             return 289.9681764 + 2.138861745 / excess_oxidizing
         else:
             raise ValueError(f"{fuel} not found")
+    elif substance == "N2":
+        return 297
+    elif substance == "NH3":
+        return 488.5
+    elif substance == "Ar":
+        return 208.2
+    elif substance == "H2":
+        return 4118.2
+    elif substance == "He":
+        return 2078.2
+    elif substance == "O2":
+        return 260
+    elif substance == "Kr":
+        return 99.3
+    elif substance == "Xe":
+        return 63.4
+    elif substance == "Ne":
+        return 412.2
+    elif substance == "CO2":
+        return 189
     else:
         raise ValueError(f"{substance} not found")
 
