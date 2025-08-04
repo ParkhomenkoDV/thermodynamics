@@ -351,11 +351,6 @@ class TestStoichiometry:
             "T-2",
             "TC-1",
             "ТС1",
-            "КЕРОСИН",
-            "Т-1",
-            "Т-2",
-            "ТС-1",
-            "TC1",
         ],
     )
     def test_kerosene_group(self, fuel):
@@ -363,7 +358,7 @@ class TestStoichiometry:
         assert stoichiometry(fuel) == pytest.approx(14.61)
 
     # Тесты для бензиновой группы
-    @pytest.mark.parametrize("fuel", ["PETROL", "GASOLINE", "БЕНЗИН"])
+    @pytest.mark.parametrize("fuel", ["PETROL", "GASOLINE"])
     def test_petrol_group(self, fuel):
         assert stoichiometry(fuel) == pytest.approx(14.91)
 
@@ -374,11 +369,7 @@ class TestStoichiometry:
             "SOLAR",
             "SOLAR OIL",
             "SOLAR_OIL",
-            "СОЛЯРКА",
-            "СОЛЯРОВОЕ МАСЛО",
-            "СОЛЯРОВОЕ_МАСЛО",
             "DIESEL",
-            "ДИЗЕЛЬ",
         ],
     )
     def test_diesel_group(self, fuel):
@@ -419,7 +410,6 @@ class TestStoichiometry:
     def test_case_insensitivity(self):
         """Проверка работы функции с разным регистром"""
         assert stoichiometry("kerosene") == stoichiometry("KEROSENE")
-        assert stoichiometry("бензин") == stoichiometry("БЕНЗИН")
         assert stoichiometry("t-1") == stoichiometry("T-1")
 
     # Тесты на пробелы и подчеркивания
@@ -427,7 +417,6 @@ class TestStoichiometry:
         """Проверка эквивалентности вариантов с пробелами и подчеркиваниями"""
         assert stoichiometry("SOLAR OIL") == stoichiometry("SOLAR_OIL")
         assert stoichiometry("ПРИРОДНЫЙ ГАЗ") == stoichiometry("ПРИРОДНЫЙ_ГАЗ")
-        assert stoichiometry("СОЛЯРОВОЕ МАСЛО") == stoichiometry("СОЛЯРОВОЕ_МАСЛО")
 
     # Тест на пустую строку
     def test_empty_string(self):

@@ -1,5 +1,6 @@
 import numpy as np
-from numpy import isnan, log, nan
+from numpy import isnan, nan
+from numpy import log as ln
 from scipy import interpolate
 
 try:
@@ -83,13 +84,13 @@ def efficiency_polytropic(process="", pipi=nan, effeff=nan, k=nan) -> float:
     """Политропический КПД"""
     if pipi == 1:
         return 1
-    if process.upper() in ("C", "COMPRESSION"):
-        return ((k - 1) / k) * log(pipi) / log((pipi ** ((k - 1) / k) - 1) / effeff + 1)
-    if process.upper() in ("E", "EXTENSION"):
+    if process.upper().startswith("C"):  # COMPRESSION
+        return ((k - 1) / k) * ln(pipi) / ln((pipi ** ((k - 1) / k) - 1) / effeff + 1)
+    if process.upper().startswith("E"):  # EXTENSION
         return (
             -(k / (k - 1))
-            / log(pipi)
-            * log(effeff * (1 / (pipi ** ((k - 1) / k)) - 1) + 1)
+            / ln(pipi)
+            * ln(effeff * (1 / (pipi ** ((k - 1) / k)) - 1) + 1)
         )
     raise Exception(f'{process} not in ("C", "E")')
 
@@ -123,7 +124,7 @@ def chemical_formula_to_dict(formula: str) -> dict[str:int]:
     return result
 
 
-def adiabatic_index(gas_const: float, cp: float) -> float:
+def adiabatic_index(gas_const: int | float, cp: int | float) -> float:
     """Показатель адиабаты"""
     if cp == gas_const:
         return nan
@@ -214,24 +215,15 @@ def stoichiometry(fuel: str) -> float:
         "T-2",
         "TC-1",
         "ТС1",
-        "КЕРОСИН",
-        "Т-1",
-        "Т-2",
-        "ТС-1",
-        "TC1",
     ):
         return 14.61
-    elif fuel in ("PETROL", "GASOLINE", "БЕНЗИН"):
+    elif fuel in ("PETROL", "GASOLINE"):
         return 14.91
     elif fuel in (
         "SOLAR",
         "SOLAR OIL",
         "SOLAR_OIL",
-        "СОЛЯРКА",
-        "СОЛЯРОВОЕ МАСЛО",
-        "СОЛЯРОВОЕ_МАСЛО",
         "DIESEL",
-        "ДИЗЕЛЬ",
     ):
         return 14.35
     elif fuel in ("MAZUT", "МАЗУТ", "Ф5", "Ф12"):
@@ -453,13 +445,11 @@ def heat_capacity_at_constant_pressure(
             if fuel.upper() in (
                 "C2H8N2",
                 "KEROSENE",
-                "КЕРОСИН",
                 "ТС-1",
                 "PETROL",
-                "БЕНЗИН",
             ):
                 return cp_clean_kerosene(temperature)
-            elif fuel.upper() in ("ДИЗЕЛЬ", "DIESEL"):
+            elif fuel.upper() == "DIESEL":
                 return cp_clean_diesel(temperature)
             else:
                 ValueError(f"{fuel} not found")
@@ -550,7 +540,7 @@ def heat_capacity_at_constant_pressure(
         return 523
     elif substance == "Ne":  # TODO
         return 1038
-    elif substance.upper() in ("C2H8N2", "KEROSENE", "TC-1", "КЕРОСИН", "ТС-1"):
+    elif substance.upper() in ("C2H8N2", "KEROSENE", "TC-1"):
         """Теплоемкость жидкого керосина"""
         return cp_kerosene(temperature)
     else:
@@ -596,7 +586,7 @@ def dynamic_viscosity(
         f"type {temperature} must be numeric"
     )
 
-    if substance.upper() in ("EXHAUST", "ВЫХЛОП"):
+    if substance.upper() == "EXHAUST":
         assert not isnan(excess_oxidizing), ValueError(
             f"{excess_oxidizing} must be numeric"
         )
