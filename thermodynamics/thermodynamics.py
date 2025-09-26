@@ -21,14 +21,10 @@ def gdf(
 ) -> float:
     """Газодинамические функции"""
     assert isinstance(parameter, str), TypeError(f"type {parameter} must be str")
-    assert isinstance(equivalent_speed, (int, float, np.number)), TypeError(
-        f"type {equivalent_speed} must be numeric"
-    )
+    assert isinstance(equivalent_speed, (int, float, np.number)), TypeError(f"type {equivalent_speed} must be numeric")
     parameter = parameter.upper()
     if parameter == "T":
-        assert isinstance(adiabatic_index, (int, float, np.number)), TypeError(
-            f"type {adiabatic_index} must be numeric"
-        )
+        assert isinstance(adiabatic_index, (int, float, np.number)), TypeError(f"type {adiabatic_index} must be numeric")
         return 1 - equivalent_speed**2 * ((adiabatic_index - 1) / (adiabatic_index + 1))
     elif parameter == "P":
         return gdf(
@@ -65,11 +61,7 @@ def temperature_atmosphere_standard(height) -> tuple[float, str]:
 
 def pressure_atmosphere_standard(height) -> tuple[float, str]:
     """Статическое давление стандартной атмосферы"""
-    return (
-        101_325 * (temperature_atmosphere_standard(height)[0] / 288.15) ** 5.2533
-        if height < 11_000
-        else 22_699.9 * np.exp((11_000 - height) / 6318)
-    ), "Pa"
+    return (101_325 * (temperature_atmosphere_standard(height)[0] / 288.15) ** 5.2533 if height < 11_000 else 22_699.9 * np.exp((11_000 - height) / 6318)), "Pa"
 
 
 def atmosphere_standard(height: int | float) -> dict[str : tuple[float, str]]:
@@ -87,11 +79,7 @@ def efficiency_polytropic(process="", pipi=nan, effeff=nan, k=nan) -> float:
     if process.upper().startswith("C"):  # COMPRESSION
         return ((k - 1) / k) * ln(pipi) / ln((pipi ** ((k - 1) / k) - 1) / effeff + 1)
     if process.upper().startswith("E"):  # EXTENSION
-        return (
-            -(k / (k - 1))
-            / ln(pipi)
-            * ln(effeff * (1 / (pipi ** ((k - 1) / k)) - 1) + 1)
-        )
+        return -(k / (k - 1)) / ln(pipi) * ln(effeff * (1 / (pipi ** ((k - 1) / k)) - 1) + 1)
     raise Exception(f'{process} not in ("C", "E")')
 
 
@@ -140,9 +128,7 @@ def gas_const(substance: str, excess_oxidizing=nan, fuel: str = "") -> float:
         return 287.14
     elif substance.upper() == "EXHAUST":
         """Газовая постоянная продуктов сгорания"""
-        assert isinstance(excess_oxidizing, (int, float, np.number)) or not isnan(
-            excess_oxidizing
-        ), TypeError(f"type {excess_oxidizing} must be numeric")
+        assert isinstance(excess_oxidizing, (int, float, np.number)) or not isnan(excess_oxidizing), TypeError(f"type {excess_oxidizing} must be numeric")
         assert excess_oxidizing > 0, ValueError(f"{excess_oxidizing} must be > 0")
         assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
         fuel = fuel.upper()
@@ -283,6 +269,7 @@ cp_clean_kerosene = interpolate.interp1d(
         1439.1,
     ),
     kind=2,
+    fill_value="extrapolate",
 )
 
 cp_clean_diesel = interpolate.interp1d(
@@ -393,6 +380,7 @@ cp_kerosene = interpolate.interp1d(
         3260,
     ),
     kind=2,
+    fill_value="extrapolate",
 )
 
 
@@ -404,12 +392,8 @@ def heat_capacity_at_constant_pressure(
 ) -> float:
     """Теплоемкость при постоянном давлении (Дж/кг/К)"""
     assert isinstance(substance, str), TypeError(f"type {substance} must be str")
-    assert isinstance(temperature, (int, float, np.number)), TypeError(
-        f"type {temperature} must be numeric"
-    )
-    assert isinstance(excess_oxidizing, (int, float, np.number)), TypeError(
-        f"type {excess_oxidizing} must be numeric"
-    )
+    assert isinstance(temperature, (int, float, np.number)), TypeError(f"type {temperature} must be numeric")
+    assert isinstance(excess_oxidizing, (int, float, np.number)), TypeError(f"type {excess_oxidizing} must be numeric")
     assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
 
     if substance.upper() == "AIR":
@@ -445,9 +429,7 @@ def heat_capacity_at_constant_pressure(
                         excess_oxidizing=1,
                         fuel=fuel,
                     )
-                    + (excess_oxidizing - 1)
-                    * l0
-                    * heat_capacity_at_constant_pressure("AIR", temperature=temperature)
+                    + (excess_oxidizing - 1) * l0 * heat_capacity_at_constant_pressure("AIR", temperature=temperature)
                 ) / (1 + excess_oxidizing * l0)
             else:
                 # PTM 1677-83
@@ -553,20 +535,13 @@ def dynamic_viscosity(
 ) -> float:
     """Динамическая вязкость (Па*с)"""
     assert isinstance(substance, str), TypeError(f"type {substance} must be str")
-    assert isinstance(temperature, (int, float, np.number)), TypeError(
-        f"type {temperature} must be numeric"
-    )
+    assert isinstance(temperature, (int, float, np.number)), TypeError(f"type {temperature} must be numeric")
 
     if substance.upper() == "EXHAUST":
-        assert not isnan(excess_oxidizing), ValueError(
-            f"{excess_oxidizing} must be numeric"
-        )
+        assert not isnan(excess_oxidizing), ValueError(f"{excess_oxidizing} must be numeric")
         coefs = (+0.505, +4.849, -1.333, +0.229)
         t_1000 = temperature / 1_000
-        return 10 ** (-5) * (
-            sum(coef * t_1000**i for i, coef in enumerate(coefs))
-            - 0.275 / excess_oxidizing
-        )
+        return 10 ** (-5) * (sum(coef * t_1000**i for i, coef in enumerate(coefs)) - 0.275 / excess_oxidizing)
     elif substance == "N2":
         return 16.67 / 10**6 * (temperature / T0) ** 0.68
     elif substance == "NH3":
@@ -596,9 +571,7 @@ def dynamic_viscosity(
 def thermal_conductivity(substance: str, temperature: int | float | np.number) -> float:
     """Теплопроводность (Вт/м/К)"""
     assert isinstance(substance, str), TypeError(f"type {substance} must be str")
-    assert isinstance(temperature, (int, float, np.number)), TypeError(
-        f"type {temperature} must be numeric"
-    )
+    assert isinstance(temperature, (int, float, np.number)), TypeError(f"type {temperature} must be numeric")
 
     if substance == "N2":
         return 241.9 / 10**4 * (temperature / T0) ** 0.8
@@ -630,9 +603,7 @@ def g_cool_ciam(temperature_input, temperature_output, temperature_lim) -> float
     """Эмпирический относительный массовый расход на охлаждение
     по max температурам до и после КС и допустимой температуре,
     отнесенный к расходу на входе в горячую часть"""
-    θ = (temperature_output - temperature_lim) / (
-        temperature_output - temperature_input
-    )
+    θ = (temperature_output - temperature_lim) / (temperature_output - temperature_input)
     g_cool = 0.059 * θ / (1 - 1.42 * θ)
     return g_cool if g_cool > 0 else 0
 

@@ -2,7 +2,19 @@ import numpy as np
 import pytest
 from numpy import isclose, isnan, nan
 
-from thermodynamics import *
+from thermodynamics import (
+    T0,
+    adiabatic_index,
+    atmosphere_standard,
+    chemical_formula_to_dict,
+    gas_const,
+    gdf,
+    heat_capacity_at_constant_pressure,
+    pressure_atmosphere_standard,
+    stoichiometry,
+    temperature_atmosphere_standard,
+    thermal_conductivity,
+)
 
 from .parameters import parameters as tdp
 
@@ -17,9 +29,7 @@ class TestGDF:
     # Тесты для параметра "T" (температура)
     def test_T_calculation(self):
         expected = 1 - self.TEST_LAMBDA**2 * ((self.TEST_K - 1) / (self.TEST_K + 1))
-        result = gdf(
-            "T", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
-        )
+        result = gdf("T", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K)
         assert isclose(result, expected)
 
     @pytest.mark.parametrize(
@@ -35,40 +45,24 @@ class TestGDF:
 
     # Тесты для параметра "P" (давление)
     def test_P_calculation(self):
-        T_value = gdf(
-            "T", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
-        )
+        T_value = gdf("T", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K)
         expected = T_value ** (self.TEST_K / (self.TEST_K - 1))
-        result = gdf(
-            "P", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
-        )
+        result = gdf("P", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K)
         assert isclose(result, expected)
 
     # Тесты для параметра "D" (плотность)
     def test_D_calculation(self):
-        T_value = gdf(
-            "T", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
-        )
+        T_value = gdf("T", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K)
         expected = T_value ** (1 / (self.TEST_K - 1))
-        result = gdf(
-            "D", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
-        )
+        result = gdf("D", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K)
         assert isclose(result, expected)
 
     # Тесты для параметров "G" и "MF" (массовый расход)
     @pytest.mark.parametrize("param", ["G", "MF"])
     def test_mass_flow_calculation(self, param):
-        D_value = gdf(
-            "D", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
-        )
-        expected = (
-            ((self.TEST_K + 1) / 2) ** (1 / (self.TEST_K - 1))
-            * self.TEST_LAMBDA
-            * D_value
-        )
-        result = gdf(
-            param, equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K
-        )
+        D_value = gdf("D", equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K)
+        expected = ((self.TEST_K + 1) / 2) ** (1 / (self.TEST_K - 1)) * self.TEST_LAMBDA * D_value
+        result = gdf(param, equivalent_speed=self.TEST_LAMBDA, adiabatic_index=self.TEST_K)
         assert isclose(result, expected)
 
     # Тесты для параметров "I" и "MV" (импульс)
@@ -111,12 +105,8 @@ class TestGDF:
 
     # Тесты на регистронезависимость
     def test_case_insensitivity(self):
-        assert gdf("t", equivalent_speed=0.5, adiabatic_index=1.4) == gdf(
-            "T", equivalent_speed=0.5, adiabatic_index=1.4
-        )
-        assert gdf("g", equivalent_speed=0.5, adiabatic_index=1.4) == gdf(
-            "G", equivalent_speed=0.5, adiabatic_index=1.4
-        )
+        assert gdf("t", equivalent_speed=0.5, adiabatic_index=1.4) == gdf("T", equivalent_speed=0.5, adiabatic_index=1.4)
+        assert gdf("g", equivalent_speed=0.5, adiabatic_index=1.4) == gdf("G", equivalent_speed=0.5, adiabatic_index=1.4)
 
     # Тест на очень большое значение λ
     def test_large_lambda(self):
@@ -286,9 +276,7 @@ class TestGasConst:
         ],
     )
     def test_exhaust_with_valid_fuels(self, fuel, alpha, expected):
-        assert gas_const("exhaust", excess_oxidizing=alpha, fuel=fuel) == pytest.approx(
-            expected
-        )
+        assert gas_const("exhaust", excess_oxidizing=alpha, fuel=fuel) == pytest.approx(expected)
 
     # Тесты на ошибки
     def test_invalid_substance(self):
@@ -606,9 +594,7 @@ class TestHeatCapacityAtConstantPressure:
 
     def test_air_case_insensitive(self):
         """Проверка регистронезависимости"""
-        assert heat_capacity_at_constant_pressure(
-            "AIR", 300
-        ) == heat_capacity_at_constant_pressure("air", 300)
+        assert heat_capacity_at_constant_pressure("AIR", 300) == heat_capacity_at_constant_pressure("air", 300)
 
     # 2. Тесты для чистых веществ
     @pytest.mark.parametrize(
@@ -633,9 +619,7 @@ class TestHeatCapacityAtConstantPressure:
     @pytest.mark.parametrize("temp", TEST_TEMPERATURES)
     def test_exhaust_stoichiometric(self, fuel, temp):
         """Проверка стехиометрического состава (alpha=1)"""
-        result = heat_capacity_at_constant_pressure(
-            "exhaust", temp, excess_oxidizing=1, fuel=fuel
-        )
+        result = heat_capacity_at_constant_pressure("exhaust", temp, excess_oxidizing=1, fuel=fuel)
         assert isinstance(result, (int, float, np.number, np.ndarray))
         assert result > 0
 
@@ -644,9 +628,7 @@ class TestHeatCapacityAtConstantPressure:
     @pytest.mark.parametrize("temp", [500, 1000])
     def test_exhaust_non_stoichiometric(self, fuel, alpha, temp):
         """Проверка нестехиометрического состава"""
-        result = heat_capacity_at_constant_pressure(
-            "exhaust", temp, excess_oxidizing=alpha, fuel=fuel
-        )
+        result = heat_capacity_at_constant_pressure("exhaust", temp, excess_oxidizing=alpha, fuel=fuel)
         assert isinstance(result, (int, float, np.number, np.ndarray))
         assert result > 0
 
@@ -711,15 +693,5 @@ class TestHeatCapacityAtConstantPressure:
     def test_air_calculation(self):
         """Проверка точности расчета для воздуха"""
         temp = 1000
-        expected = 4187 * (
-            0.2521923
-            + -0.1186612 * 1
-            + 0.3360775 * 1**2
-            + -0.3073812 * 1**3
-            + 0.1382207 * 1**4
-            + -0.03090246 * 1**5
-            + 0.002745383 * 1**6
-        )
-        assert pytest.approx(expected, rel=1e-6) == heat_capacity_at_constant_pressure(
-            "AIR", temp
-        )
+        expected = 4187 * (0.2521923 + -0.1186612 * 1 + 0.3360775 * 1**2 + -0.3073812 * 1**3 + 0.1382207 * 1**4 + -0.03090246 * 1**5 + 0.002745383 * 1**6)
+        assert pytest.approx(expected, rel=1e-6) == heat_capacity_at_constant_pressure("AIR", temp)
