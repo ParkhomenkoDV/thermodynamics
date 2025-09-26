@@ -129,27 +129,26 @@ def gas_const(substance: str, excess_oxidizing=nan, fuel: str = "") -> float:
     elif substance.upper() == "EXHAUST":
         """Газовая постоянная продуктов сгорания"""
         assert isinstance(excess_oxidizing, (int, float, np.number)) or not isnan(excess_oxidizing), TypeError(f"type {excess_oxidizing} must be numeric")
-        assert excess_oxidizing > 0, ValueError(f"{excess_oxidizing} must be > 0")
         assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
         fuel = fuel.upper()
         if fuel in ("C2H8N2", "KEROSENE"):
-            return 288.1954313 + 0.691695880 / excess_oxidizing
-        elif fuel in ("T1", "Т1", "РЕАКТИВНОЕ ТОПЛИВО"):
-            return 288.1856907 - 0.213996376 / excess_oxidizing
+            return 288.1954313 + 0.691695880 / excess_oxidizing if 0 < excess_oxidizing else nan
+        elif fuel in ("T1", "РЕАКТИВНОЕ ТОПЛИВО"):
+            return 288.1856907 - 0.213996376 / excess_oxidizing if 0 < excess_oxidizing else nan
         elif fuel.upper() in ("TC1", "TC-1"):
-            return 288.1901130 + 0.196844775 / excess_oxidizing
+            return 288.1901130 + 0.196844775 / excess_oxidizing if 0 < excess_oxidizing else nan
         elif fuel == "DIESEL":
-            return 288.1792281 - 0.813445523 / excess_oxidizing
+            return 288.1792281 - 0.813445523 / excess_oxidizing if 0 < excess_oxidizing else nan
         elif fuel in ("SOLAR", "SOLAR OIL", "SOLAR_OIL"):
-            return 288.1729604 - 1.432301634 / excess_oxidizing
+            return 288.1729604 - 1.432301634 / excess_oxidizing if 0 < excess_oxidizing else nan
         elif fuel == "MAZUT":
-            return 288.1635509 - 2.254443192 / excess_oxidizing
+            return 288.1635509 - 2.254443192 / excess_oxidizing if 0 < excess_oxidizing else nan
         elif fuel in ("ПРИРОДНЫЙ ГАЗ", "ПРИРОДНЫЙ_ГАЗ"):
-            return 290.0288864 + 12.207960640 / excess_oxidizing
+            return 290.0288864 + 12.207960640 / excess_oxidizing if 0 < excess_oxidizing else nan
         elif fuel in ("КОКСОВЫЙ ГАЗ", "КОКСОВЫЙ_ГАЗ"):
-            return 288.4860344 + 20.146254880 / excess_oxidizing
+            return 288.4860344 + 20.146254880 / excess_oxidizing if 0 < excess_oxidizing else nan
         elif fuel == "BIOGAS":
-            return 289.9681764 + 2.138861745 / excess_oxidizing
+            return 289.9681764 + 2.138861745 / excess_oxidizing if 0 < excess_oxidizing else nan
         else:
             raise ValueError(f"{fuel} not found")
     elif substance == "N2":
@@ -180,23 +179,11 @@ def stoichiometry(fuel: str) -> float:
     """Стехиометрический коэффициент []"""
     assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
     fuel = fuel.upper()
-    if fuel in (
-        "C2H8N2",
-        "KEROSENE",
-        "T-1",
-        "T-2",
-        "TC-1",
-        "TC1",
-    ):
+    if fuel in ("C2H8N2", "KEROSENE", "T-1", "T-2", "TC-1", "TC1"):
         return 14.61
     elif fuel in ("PETROL", "GASOLINE"):
         return 14.91
-    elif fuel in (
-        "SOLAR",
-        "SOLAR OIL",
-        "SOLAR_OIL",
-        "DIESEL",
-    ):
+    elif fuel in ("SOLAR", "SOLAR OIL", "SOLAR_OIL", "DIESEL"):
         return 14.35
     elif fuel in ("MAZUT", "МАЗУТ", "Ф5", "Ф12"):
         return 13.31
@@ -222,163 +209,21 @@ def stoichiometry(fuel: str) -> float:
 
 
 cp_clean_kerosene = interpolate.interp1d(
-    (
-        273,
-        373,
-        473,
-        573,
-        673,
-        773,
-        873,
-        973,
-        1073,
-        1173,
-        1273,
-        1373,
-        1473,
-        1573,
-        1673,
-        1773,
-        1873,
-        1973,
-        2073,
-        2173,
-        2273,
-    ),
-    (
-        1055.7,
-        1079.0,
-        1106.8,
-        1137.2,
-        1168.5,
-        1199.4,
-        1229.2,
-        1257.0,
-        1282.4,
-        1305.4,
-        1325.9,
-        1344.0,
-        1359.9,
-        1374.0,
-        1386.5,
-        1397.7,
-        1407.9,
-        1417.2,
-        1425.6,
-        1433.1,
-        1439.1,
-    ),
+    (273, 373, 473, 573, 673, 773, 873, 973, 1073, 1173, 1273, 1373, 1473, 1573, 1673, 1773, 1873, 1973, 2073, 2173, 2273),
+    (1055.7, 1079.0, 1106.8, 1137.2, 1168.5, 1199.4, 1229.2, 1257.0, 1282.4, 1305.4, 1325.9, 1344.0, 1359.9, 1374.0, 1386.5, 1397.7, 1407.9, 1417.2, 1425.6, 1433.1, 1439.1),
     kind=2,
     fill_value="extrapolate",
 )
 
 cp_clean_diesel = interpolate.interp1d(
-    (
-        273,
-        373,
-        473,
-        573,
-        673,
-        773,
-        873,
-        973,
-        1073,
-        1173,
-        1273,
-        1373,
-        1473,
-        1573,
-        1673,
-        1773,
-        1873,
-        1973,
-        2073,
-        2173,
-        2273,
-    ),
-    (
-        1050.0,
-        1073.6,
-        1101.6,
-        1132.0,
-        1163.3,
-        1194.1,
-        1223.6,
-        1251.2,
-        1276.4,
-        1299.2,
-        1319.4,
-        1337.2,
-        1352.9,
-        1366.7,
-        1379.0,
-        1390.0,
-        1400.0,
-        1409.2,
-        1417.5,
-        1424.9,
-        1430.9,
-    ),
+    (273, 373, 473, 573, 673, 773, 873, 973, 1073, 1173, 1273, 1373, 1473, 1573, 1673, 1773, 1873, 1973, 2073, 2173, 2273),
+    (1050.0, 1073.6, 1101.6, 1132.0, 1163.3, 1194.1, 1223.6, 1251.2, 1276.4, 1299.2, 1319.4, 1337.2, 1352.9, 1366.7, 1379.0, 1390.0, 1400.0, 1409.2, 1417.5, 1424.9, 1430.9),
     kind=2,
 )
 
 cp_kerosene = interpolate.interp1d(
-    (
-        293.15,
-        303.15,
-        313.15,
-        323.15,
-        333.15,
-        343.15,
-        353.15,
-        363.15,
-        373.15,
-        383.15,
-        393.15,
-        403.15,
-        413.15,
-        423.15,
-        433.15,
-        443.15,
-        453.15,
-        463.15,
-        473.15,
-        483.15,
-        493.15,
-        503.15,
-        513.15,
-        523.15,
-        533.15,
-        543.15,
-    ),
-    (
-        2000,
-        2040,
-        2090,
-        2140,
-        2180,
-        2230,
-        2280,
-        2330,
-        2380,
-        2430,
-        2480,
-        2530,
-        2580,
-        2630,
-        2680,
-        2730,
-        2790,
-        2840,
-        2890,
-        2940,
-        3000,
-        3050,
-        3110,
-        3160,
-        3210,
-        3260,
-    ),
+    (293.15, 303.15, 313.15, 323.15, 333.15, 343.15, 353.15, 363.15, 373.15, 383.15, 393.15, 403.15, 413.15, 423.15, 433.15, 443.15, 453.15, 463.15, 473.15, 483.15, 493.15, 503.15, 513.15, 523.15, 533.15, 543.15),
+    (2000, 2040, 2090, 2140, 2180, 2230, 2280, 2330, 2380, 2430, 2480, 2530, 2580, 2630, 2680, 2730, 2790, 2840, 2890, 2940, 3000, 3050, 3110, 3160, 3210, 3260),
     kind=2,
     fill_value="extrapolate",
 )
@@ -399,21 +244,13 @@ def heat_capacity_at_constant_pressure(
     if substance.upper() == "AIR":
         """Теплоемкость воздуха [PTM 1677-83]"""
         t_1000 = temperature / 1000
-        coefs = (
-            0.2521923,
-            -0.1186612,
-            0.3360775,
-            -0.3073812,
-            0.1382207,
-            -0.03090246,
-            0.002745383,
-        )
-        return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
+        coefs = (0.2521923, -0.1186612, 0.3360775, -0.3073812, 0.1382207, -0.03090246, 0.002745383)
+        return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs)) if 0 <= temperature <= 3_000 else nan
     elif substance.upper() == "EXHAUST":
         """Теплоемкость выхлопа"""
         if excess_oxidizing == 1:
             if fuel.upper() in ("C2H8N2", "KEROSENE", "TC-1", "PETROL"):
-                return cp_clean_kerosene(temperature)
+                return cp_clean_kerosene(temperature) if 0 <= temperature <= 2500 else nan
             elif fuel.upper() == "DIESEL":
                 return cp_clean_diesel(temperature)
             else:
@@ -434,67 +271,27 @@ def heat_capacity_at_constant_pressure(
             else:
                 # PTM 1677-83
                 t_1000 = temperature / 1000
-                coefs = (
-                    0.2079764,
-                    1.211806,
-                    -1.464097,
-                    1.291195,
-                    -0.6385396,
-                    0.1574277,
-                    -0.01518199,
-                )
+                coefs = (0.2079764, 1.211806, -1.464097, 1.291195, -0.6385396, 0.1574277, -0.01518199)
                 return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
     elif substance == "CO2":
         # PTM 1677-83
         t_1000 = temperature / 1000
-        coefs = (
-            0.1047056,
-            0.4234367,
-            -0.3953561,
-            0.2249471,
-            -0.07729786,
-            0.01462170,
-            -0.001166819,
-        )
+        coefs = (0.1047056, 0.4234367, -0.3953561, 0.2249471, -0.07729786, 0.01462170, -0.001166819)
         return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
     elif substance == "H2O":
         # PTM 1677-83
         t_1000 = temperature / 1000
-        coefs = (
-            0.4489375,
-            -0.1088401,
-            0.4027652,
-            -0.2638393,
-            0.07993751,
-            -0.0115716,
-            0.0006241951,
-        )
+        coefs = (0.4489375, -0.1088401, 0.4027652, -0.2638393, 0.07993751, -0.0115716, 0.0006241951)
         return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
     elif substance == "O2":
         # PTM 1677-83
         t_1000 = temperature / 1000
-        coefs = (
-            0.2083632,
-            -0.0112279,
-            0.2235868,
-            -0.2732668,
-            0.1461334,
-            -0.03687021,
-            0.003584204,
-        )
+        coefs = (0.2083632, -0.0112279, 0.2235868, -0.2732668, 0.1461334, -0.03687021, 0.003584204)
         return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
     elif substance == "H2":
         # PTM 1677-83
         t_1000 = temperature / 1000
-        coefs = (
-            3.070881,
-            2.230734,
-            -4.909,
-            5.321652,
-            -2.756533,
-            0.6851526,
-            -0.06596988,
-        )
+        coefs = (3.070881, 2.230734, -4.909, 5.321652, -2.756533, 0.6851526, -0.06596988)
         return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
     elif substance == "N2":
         # https://www.highexpert.ru/content/gases/nitrogen.html
@@ -505,7 +302,7 @@ def heat_capacity_at_constant_pressure(
         return 1038
     elif substance.upper() in ("C2H8N2", "KEROSENE", "TC-1"):
         """Теплоемкость жидкого керосина"""
-        return cp_kerosene(temperature)
+        return cp_kerosene(temperature) if -55 + T0 <= temperature <= 400 + T0 else nan  # температуры замерзания и воспламенения
     else:
         raise ValueError(f"{substance} not found")
 
