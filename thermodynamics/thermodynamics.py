@@ -1,12 +1,13 @@
 import numpy as np
 from numpy import isnan, nan
 from numpy import log as ln
-
-# try:
-# from .parameters import parameters as tdp  # Попытка относительного импорта
-# except ImportError:
-from parameters import parameters as tdp  # Резервный абсолютный импорт
 from scipy import interpolate
+
+try:
+    from .parameters import parameters as tdp  # Попытка относительного импорта
+except ImportError:
+    from parameters import parameters as tdp  # Резервный абсолютный импорт
+
 
 np.seterr(invalid="ignore")  # игнорирование nan ошибок
 
