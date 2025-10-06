@@ -4,4 +4,5 @@ from mathematics import Constants
 parameters = Constants(
     t="temperature",
     p="pressure",
+    mf="mass_flow",
 )
