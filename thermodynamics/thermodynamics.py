@@ -15,6 +15,16 @@ T0 = 273.15  # Абсолютный ноль температуры
 GAS_CONST = 8.314_462_618_153_24  # Универсальная газовая постоянная
 
 
+def sonic_velocity(k: float, gas_const: float, temperature: float) -> float:
+    """Критическая скорость звука"""
+    return (k * gas_const * temperature) ** 0.5
+
+
+def сritical_sonic_velocity(k: float, gas_const: float, total_temperature: float) -> float:
+    """Критическая скорость звука"""
+    return (k / (k + 1) * gas_const * total_temperature) ** 0.5
+
+
 def gdf(
     parameter: str,
     equivalent_speed: float,
@@ -323,7 +333,7 @@ def lower_heating_value(fuel: str) -> float:
     elif fuel in ("КОКСОВЫЙ ГАЗ",):
         return nan
     else:
-        raise ValueError(f"{fuel} not found")
+        raise ValueError(f"'{fuel}' not found")
 
 
 def dynamic_viscosity(
@@ -363,7 +373,7 @@ def dynamic_viscosity(
     elif substance == "CO2":
         return 13.65 / 10**6 * (temperature / T0) ** 0.82
     else:
-        raise ValueError(f"{substance} not found")
+        raise ValueError(f"'{substance}' not found")
 
 
 def thermal_conductivity(substance: str, temperature: int | float | np.number) -> float:
@@ -394,7 +404,7 @@ def thermal_conductivity(substance: str, temperature: int | float | np.number) -
     elif substance == "CO2":
         return 147 / 10**4 * (temperature / T0) ** 1.23
     else:
-        raise ValueError(f"{substance} not found")
+        raise ValueError(f"'{substance}' not found")
 
 
 def g_cool_ciam(temperature_input, temperature_output, temperature_lim) -> float:
