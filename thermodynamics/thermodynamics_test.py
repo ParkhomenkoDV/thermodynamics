@@ -11,9 +11,11 @@ from thermodynamics import (
     gdf,
     heat_capacity_at_constant_pressure,
     pressure_atmosphere_standard,
+    sonic_velocity,
     stoichiometry,
     temperature_atmosphere_standard,
     thermal_conductivity,
+    сritical_sonic_velocity,
 )
 
 from .parameters import parameters as tdp
@@ -689,3 +691,43 @@ class TestHeatCapacityAtConstantPressure:
         temp = 1000
         expected = 4187 * (0.2521923 + -0.1186612 * 1 + 0.3360775 * 1**2 + -0.3073812 * 1**3 + 0.1382207 * 1**4 + -0.03090246 * 1**5 + 0.002745383 * 1**6)
         assert pytest.approx(expected, rel=1e-6) == heat_capacity_at_constant_pressure("AIR", temp)
+
+
+class TestSonicVelocity:
+    """Тесты для функции sonic_velocity"""
+
+    EPSREL = 1e-6
+
+    @pytest.mark.parametrize(
+        "k, gc, t, expected",
+        [
+            (1.4, 287, 288, 340.174),
+            (1.3, 189, 300, 271.496),
+            (1.4, 287, 0, 0.0),
+            (1.4, 287, 1000, 633.877),
+        ],
+    )
+    def test_sonic_velocity(self, k, gc, t, expected):
+        """Тест для стандартных условий воздуха"""
+        result = sonic_velocity(k, gc, t)
+        assert isclose(result, expected, rtol=self.EPSREL)
+
+
+class TestCriticalSonicVelocity:
+    """Тесты для функции сritical_sonic_velocity"""
+
+    EPSREL = 1e-6
+
+    @pytest.mark.parametrize(
+        "k, gc, t, expected",
+        [
+            (1.4, 287, 288, 219.5814),
+            (1.3, 189, 300, 179.0190),
+            (1.4, 287, 0, 0.0),
+            (1.4, 287, 1000, 409.1658),
+        ],
+    )
+    def test_сritical_sonic_velocity(self, k, gc, t, expected):
+        """Тест для стандартных условий воздуха"""
+        result = сritical_sonic_velocity(k, gc, t)
+        assert isclose(result, expected, rtol=self.EPSREL)
