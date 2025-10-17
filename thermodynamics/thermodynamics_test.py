@@ -721,10 +721,10 @@ class TestCriticalSonicVelocity:
     @pytest.mark.parametrize(
         "k, gc, t, expected",
         [
-            (1.4, 287, 288, 219.5814),
-            (1.3, 189, 300, 179.0190),
+            (1.4, 287, 288, 310.535),
+            (1.3, 189, 300, 253.1712),
             (1.4, 287, 0, 0.0),
-            (1.4, 287, 1000, 409.1658),
+            (1.4, 287, 1000, 578.6478),
         ],
     )
     def test_сritical_sonic_velocity(self, k, gc, t, expected):

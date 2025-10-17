@@ -22,7 +22,7 @@ def sonic_velocity(k: float, gas_const: float, temperature: float) -> float:
 
 def сritical_sonic_velocity(k: float, gas_const: float, total_temperature: float) -> float:
     """Критическая скорость звука"""
-    return (k / (k + 1) * gas_const * total_temperature) ** 0.5
+    return (2 * k / (k + 1) * gas_const * total_temperature) ** 0.5
 
 
 def gdf(
