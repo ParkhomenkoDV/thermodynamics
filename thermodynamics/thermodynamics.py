@@ -38,27 +38,11 @@ def gdf(
         assert isinstance(adiabatic_index, (int, float, np.number)), TypeError(f"type {adiabatic_index} must be numeric")
         return 1 - equivalent_speed**2 * ((adiabatic_index - 1) / (adiabatic_index + 1))
     elif parameter == "P":
-        return gdf(
-            "T",
-            equivalent_speed=equivalent_speed,
-            adiabatic_index=adiabatic_index,
-        ) ** (adiabatic_index / (adiabatic_index - 1))
+        return gdf("T", equivalent_speed=equivalent_speed, adiabatic_index=adiabatic_index) ** (adiabatic_index / (adiabatic_index - 1))
     elif parameter == "D":
-        return gdf(
-            "T",
-            equivalent_speed=equivalent_speed,
-            adiabatic_index=adiabatic_index,
-        ) ** (1 / (adiabatic_index - 1))
+        return gdf("T", equivalent_speed=equivalent_speed, adiabatic_index=adiabatic_index) ** (1 / (adiabatic_index - 1))
     elif parameter in ("G", "MF"):
-        return (
-            ((adiabatic_index + 1) / 2) ** (1 / (adiabatic_index - 1))
-            * equivalent_speed
-            * gdf(
-                "D",
-                equivalent_speed=equivalent_speed,
-                adiabatic_index=adiabatic_index,
-            )
-        )
+        return ((adiabatic_index + 1) / 2) ** (1 / (adiabatic_index - 1)) * equivalent_speed * gdf("D", equivalent_speed=equivalent_speed, adiabatic_index=adiabatic_index)
     elif parameter in ("I", "MV"):
         return equivalent_speed + 1 / equivalent_speed
     else:
