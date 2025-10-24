@@ -232,13 +232,6 @@ cp_clean_diesel = interpolate.interp1d(
     kind=2,
 )
 
-cp_kerosene = interpolate.interp1d(
-    (293.15, 303.15, 313.15, 323.15, 333.15, 343.15, 353.15, 363.15, 373.15, 383.15, 393.15, 403.15, 413.15, 423.15, 433.15, 443.15, 453.15, 463.15, 473.15, 483.15, 493.15, 503.15, 513.15, 523.15, 533.15, 543.15),
-    (2000, 2040, 2090, 2140, 2180, 2230, 2280, 2330, 2380, 2430, 2480, 2530, 2580, 2630, 2680, 2730, 2790, 2840, 2890, 2940, 3000, 3050, 3110, 3160, 3210, 3260),
-    kind=2,
-    fill_value="extrapolate",
-)
-
 
 def heat_capacity_at_constant_pressure(
     substance: str,
@@ -259,7 +252,7 @@ def heat_capacity_at_constant_pressure(
         return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs)) if 0 <= temperature <= 3_000 else nan
     elif substance.upper() == "EXHAUST":
         """Теплоемкость выхлопа"""
-        if excess_oxidizing == 1:
+        if excess_oxidizing == 1:  # чистое сгорание
             if fuel.upper() in ("C2H8N2", "KEROSENE", "TC-1", "PETROL"):
                 return cp_clean_kerosene(temperature) if 0 <= temperature <= 2500 else nan
             elif fuel.upper() == "DIESEL":
@@ -269,16 +262,9 @@ def heat_capacity_at_constant_pressure(
         else:  # excess_oxidizing != 1
             if not isnan(excess_oxidizing):
                 l0 = stoichiometry(fuel)
-                return (
-                    (1 + l0)
-                    * heat_capacity_at_constant_pressure(
-                        "EXHAUST",
-                        temperature=temperature,
-                        excess_oxidizing=1,
-                        fuel=fuel,
-                    )
-                    + (excess_oxidizing - 1) * l0 * heat_capacity_at_constant_pressure("AIR", temperature=temperature)
-                ) / (1 + excess_oxidizing * l0)
+                return ((1 + l0) * heat_capacity_at_constant_pressure("EXHAUST", temperature=temperature, excess_oxidizing=1, fuel=fuel) + (excess_oxidizing - 1) * l0 * heat_capacity_at_constant_pressure("AIR", temperature=temperature)) / (
+                    1 + excess_oxidizing * l0
+                )
             else:
                 # PTM 1677-83
                 t_1000 = temperature / 1000
@@ -311,7 +297,21 @@ def heat_capacity_at_constant_pressure(
         return 523
     elif substance == "Ne":  # TODO
         return 1038
-    elif substance.upper() in ("C2H8N2", "KEROSENE", "TC-1"):
+    else:
+        raise ValueError(f"{substance} not found")
+
+
+cp_kerosene = interpolate.interp1d(
+    (293.15, 303.15, 313.15, 323.15, 333.15, 343.15, 353.15, 363.15, 373.15, 383.15, 393.15, 403.15, 413.15, 423.15, 433.15, 443.15, 453.15, 463.15, 473.15, 483.15, 493.15, 503.15, 513.15, 523.15, 533.15, 543.15),
+    (2000, 2040, 2090, 2140, 2180, 2230, 2280, 2330, 2380, 2430, 2480, 2530, 2580, 2630, 2680, 2730, 2790, 2840, 2890, 2940, 3000, 3050, 3110, 3160, 3210, 3260),
+    kind=2,
+    fill_value="extrapolate",
+)
+
+
+def heat_capacity(substance: str, temperature) -> float:
+    """Теплоемкость (Дж/кг/К)"""
+    if substance.upper() in ("C2H8N2", "KEROSENE", "TC-1"):
         """Теплоемкость жидкого керосина"""
         return cp_kerosene(temperature) if -55 + T0 <= temperature <= 400 + T0 else nan  # температуры замерзания и воспламенения
     else:

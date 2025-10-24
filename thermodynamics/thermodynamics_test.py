@@ -9,6 +9,7 @@ from thermodynamics import (
     chemical_formula_to_dict,
     gas_const,
     gdf,
+    heat_capacity,
     heat_capacity_at_constant_pressure,
     pressure_atmosphere_standard,
     sonic_velocity,
@@ -634,15 +635,6 @@ class TestHeatCapacityAtConstantPressure:
         assert isinstance(result, float)
         assert result > 0
 
-    # 4. Тесты для керосина и топлив
-    @pytest.mark.parametrize("fuel", ["C2H8N2", "KEROSENE", "TC-1"])
-    @pytest.mark.parametrize("temp", [300, 500])
-    def test_fuels_liquid(self, fuel, temp):
-        """Проверка жидких топлив"""
-        result = heat_capacity_at_constant_pressure(fuel, temp)
-        assert isinstance(result, (int, float, np.number, np.ndarray))
-        assert 2000 < result < 3500
-
     # 5. Тесты ошибок
     def test_unknown_substance(self):
         """Проверка неизвестного вещества"""
@@ -691,6 +683,18 @@ class TestHeatCapacityAtConstantPressure:
         temp = 1000
         expected = 4187 * (0.2521923 + -0.1186612 * 1 + 0.3360775 * 1**2 + -0.3073812 * 1**3 + 0.1382207 * 1**4 + -0.03090246 * 1**5 + 0.002745383 * 1**6)
         assert pytest.approx(expected, rel=1e-6) == heat_capacity_at_constant_pressure("AIR", temp)
+
+
+class TestHeatCapacity:
+    """Тесты для функции heat_capacity()"""
+
+    @pytest.mark.parametrize("fuel", ["C2H8N2", "KEROSENE", "TC-1"])
+    @pytest.mark.parametrize("temp", [300, 500])
+    def test_fuels_liquid(self, fuel, temp):
+        """Проверка жидких топлив"""
+        result = heat_capacity(fuel, temp)
+        assert isinstance(result, (int, float, np.number, np.ndarray))
+        assert 2000 < result < 3500
 
 
 class TestSonicVelocity:
