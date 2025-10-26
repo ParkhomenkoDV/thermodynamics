@@ -114,38 +114,12 @@ def adiabatic_index(gas_const: int | float, cp: int | float) -> float:
     return cp / (cp - gas_const)
 
 
-def gas_const(substance: str, excess_oxidizing=nan, fuel: str = "") -> float:
-    """Газовая постоянная [Дж/кг/К]"""
+def gas_const(substance: str) -> float:
+    """Газовая постоянная (Дж/кг/К)"""
     assert isinstance(substance, str), TypeError(f"type {substance} must be str")
 
     if substance.upper() == "AIR":
-        """Газовая постоянная воздуха"""
         return 287.14
-    elif substance.upper() == "EXHAUST":
-        """Газовая постоянная продуктов сгорания"""
-        assert isinstance(excess_oxidizing, (int, float, np.number)) or not isnan(excess_oxidizing), TypeError(f"type {excess_oxidizing} must be numeric")
-        assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
-        fuel = fuel.upper()
-        if fuel in ("C2H8N2", "KEROSENE"):
-            return 288.1954313 + 0.691695880 / excess_oxidizing if 0 < excess_oxidizing else nan
-        elif fuel in ("T1", "РЕАКТИВНОЕ ТОПЛИВО"):
-            return 288.1856907 - 0.213996376 / excess_oxidizing if 0 < excess_oxidizing else nan
-        elif fuel.upper() in ("TC1", "TC-1"):
-            return 288.1901130 + 0.196844775 / excess_oxidizing if 0 < excess_oxidizing else nan
-        elif fuel == "DIESEL":
-            return 288.1792281 - 0.813445523 / excess_oxidizing if 0 < excess_oxidizing else nan
-        elif fuel in ("SOLAR", "SOLAR OIL", "SOLAR_OIL"):
-            return 288.1729604 - 1.432301634 / excess_oxidizing if 0 < excess_oxidizing else nan
-        elif fuel == "MAZUT":
-            return 288.1635509 - 2.254443192 / excess_oxidizing if 0 < excess_oxidizing else nan
-        elif fuel in ("ПРИРОДНЫЙ ГАЗ", "ПРИРОДНЫЙ_ГАЗ"):
-            return 290.0288864 + 12.207960640 / excess_oxidizing if 0 < excess_oxidizing else nan
-        elif fuel in ("КОКСОВЫЙ ГАЗ", "КОКСОВЫЙ_ГАЗ"):
-            return 288.4860344 + 20.146254880 / excess_oxidizing if 0 < excess_oxidizing else nan
-        elif fuel == "BIOGAS":
-            return 289.9681764 + 2.138861745 / excess_oxidizing if 0 < excess_oxidizing else nan
-        else:
-            raise ValueError(f"{fuel} not found")
     elif substance == "N2":
         return 297
     elif substance == "NH3":
@@ -170,6 +144,33 @@ def gas_const(substance: str, excess_oxidizing=nan, fuel: str = "") -> float:
         raise ValueError(f"{substance} not found")
 
 
+def gas_const_exhaust(excess_oxidizing: int | float, fuel: str) -> float:
+    """Газовая постоянная продуктов сгорания (Дж/кг/К)"""
+    assert isinstance(excess_oxidizing, (int, float, np.number)) or not isnan(excess_oxidizing), TypeError(f"type {excess_oxidizing} must be numeric")
+    assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
+    fuel = fuel.upper()
+    if fuel in ("C2H8N2", "KEROSENE"):
+        return 288.1954313 + 0.691695880 / excess_oxidizing if 0 < excess_oxidizing else nan
+    elif fuel in ("T1", "РЕАКТИВНОЕ ТОПЛИВО"):
+        return 288.1856907 - 0.213996376 / excess_oxidizing if 0 < excess_oxidizing else nan
+    elif fuel.upper() in ("TC1", "TC-1"):
+        return 288.1901130 + 0.196844775 / excess_oxidizing if 0 < excess_oxidizing else nan
+    elif fuel == "DIESEL":
+        return 288.1792281 - 0.813445523 / excess_oxidizing if 0 < excess_oxidizing else nan
+    elif fuel in ("SOLAR", "SOLAR OIL", "SOLAR_OIL"):
+        return 288.1729604 - 1.432301634 / excess_oxidizing if 0 < excess_oxidizing else nan
+    elif fuel == "MAZUT":
+        return 288.1635509 - 2.254443192 / excess_oxidizing if 0 < excess_oxidizing else nan
+    elif fuel in ("ПРИРОДНЫЙ ГАЗ", "ПРИРОДНЫЙ_ГАЗ"):
+        return 290.0288864 + 12.207960640 / excess_oxidizing if 0 < excess_oxidizing else nan
+    elif fuel in ("КОКСОВЫЙ ГАЗ", "КОКСОВЫЙ_ГАЗ"):
+        return 288.4860344 + 20.146254880 / excess_oxidizing if 0 < excess_oxidizing else nan
+    elif fuel == "BIOGAS":
+        return 289.9681764 + 2.138861745 / excess_oxidizing if 0 < excess_oxidizing else nan
+    else:
+        raise ValueError(f"{fuel} not found")
+
+
 def stoichiometry(fuel: str) -> float:
     """Стехиометрический коэффициент []"""
     assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
@@ -180,7 +181,7 @@ def stoichiometry(fuel: str) -> float:
         return 14.91
     elif fuel in ("SOLAR", "SOLAR OIL", "SOLAR_OIL", "DIESEL"):
         return 14.35
-    elif fuel in ("MAZUT", "МАЗУТ", "Ф5", "Ф12"):
+    elif fuel in ("MAZUT", "Ф5", "Ф12"):
         return 13.31
     elif fuel in ("ПРИРОДНЫЙ ГАЗ", "ПРИРОДНЫЙ_ГАЗ"):
         return np.mean(
@@ -268,7 +269,10 @@ def heat_capacity_p_exhaust(
     Условная теплоемкость выхлопа (Дж/кг/К) [PTM 1677-83]
 
     Истинная теплоемкость выхлопа (Жд/кг/К) считается как:
-    (условная теплоемкость + теплоемкость окислителя * excess_oxidizing * stoichiometry) / (1 + excess_oxidizing * stoichiometry)
+    H2O = composition.get('H2O', 0)  # массовая доля волы в смеси
+    result = (1 - H2O) * (условная_теплоемкость + теплоемкость_окислителя * excess_oxidizing * stoichiometry)
+    result += H2O * excess_oxidizing * stoichiometry * heat_capacity_p('H2O', temperature)
+    result /= (1 - H2O + excess_oxidizing * stoichiometry)
     """
     assert isinstance(temperature, (int, float, np.number)), TypeError(f"type {temperature} must be numeric")
 
@@ -280,7 +284,6 @@ def heat_capacity_p_exhaust(
         result = composition.get("C", 0) / 12.01 * (44.01 * heat_capacity_p("CO2", temperature) - 32.0 * heat_capacity_p("O2", temperature))
         result += composition.get("H", 0) / 1.008 * (9.008 * heat_capacity_p("H2O", temperature) - 8.0 * heat_capacity_p("O2", temperature))
         result += composition.get("O2", 0) * heat_capacity_p("O2", temperature)
-        result += composition.get("H2O", 0) * heat_capacity_p("H2O", temperature)
         return result
     else:
         raise TypeError(f"type {composition} must be dict[str:float]")

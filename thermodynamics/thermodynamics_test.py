@@ -8,6 +8,7 @@ from thermodynamics import (
     atmosphere_standard,
     chemical_formula_to_dict,
     gas_const,
+    gas_const_exhaust,
     gdf,
     heat_capacity,
     heat_capacity_p,
@@ -251,16 +252,41 @@ class TestAdiabaticIndex:
 class TestGasConst:
     """Тесты для функции gas_const()"""
 
-    # Тесты для воздуха
-    def test_air_english(self):
-        assert gas_const("air") == 287.14
+    @pytest.mark.parametrize(
+        "substance, expected",
+        [
+            ("air", 287.14),
+            ("AIR", 287.14),
+            ("N2", 297),
+            ("NH3", 488.5),
+            ("Ar", 208.2),
+            ("H2", 4118.2),
+            ("He", 2078.2),
+            ("O2", 260),
+            ("Kr", 99.3),
+            ("Xe", 63.4),
+            ("Ne", 412.2),
+            ("CO2", 189),
+        ],
+    )
+    def test_air_english(self, substance, expected):
+        assert gas_const(substance) == expected
 
-    def test_air_case_insensitive(self):
-        assert gas_const("AiR") == 287.14
+    # Тесты на ошибки
+    def test_invalid_substance(self):
+        with pytest.raises(ValueError):
+            gas_const("invalid_substance")
+
+        with pytest.raises((AssertionError, ValueError)):
+            gas_const(123)
+
+
+class TestGasConstExhaust:
+    """Тесты для функции gas_const_exhaust()"""
 
     # Тесты для продуктов сгорания (EXHAUST)
     @pytest.mark.parametrize(
-        "fuel, alpha, expected",
+        "fuel, excess_oxidizing, expected",
         [
             ("C2H8N2", 1.0, 288.88712718),
             ("kerosene", 2.0, 288.54104318),
@@ -278,44 +304,25 @@ class TestGasConst:
             ("BIOGAS", 1.0, 292.107038145),
         ],
     )
-    def test_exhaust_with_valid_fuels(self, fuel, alpha, expected):
-        assert gas_const("exhaust", excess_oxidizing=alpha, fuel=fuel) == pytest.approx(expected)
+    def test_exhaust_with_valid_fuels(self, fuel, excess_oxidizing, expected):
+        assert gas_const_exhaust(excess_oxidizing, fuel) == pytest.approx(expected)
 
     # Тесты на ошибки
-    def test_invalid_substance(self):
+    def test_invalid(self):
         with pytest.raises(ValueError):
-            gas_const("invalid_substance")
+            gas_const_exhaust(excess_oxidizing=1.0, fuel="invalid_fuel")
 
-    def test_exhaust_without_fuel(self):
-        with pytest.raises((AssertionError, ValueError)):
-            gas_const("exhaust")
-
-    def test_invalid_fuel(self):
-        with pytest.raises(ValueError):
-            gas_const("exhaust", excess_oxidizing=1.0, fuel="invalid_fuel")
-
-    def test_non_numeric_alpha(self):
         with pytest.raises(TypeError):
-            gas_const("exhaust", excess_oxidizing="not_a_number", fuel="kerosene")
+            gas_const_exhaust(excess_oxidizing="not_a_number", fuel="kerosene")
 
-    def test_negative_alpha(self):
-        assert isnan(gas_const("exhaust", excess_oxidizing=-1.0, fuel="kerosene"))
+    def test_negative_excess_oxidizing(self):
+        assert isnan(gas_const_exhaust(excess_oxidizing=-1.0, fuel="kerosene"))
 
     def test_zero_alpha(self):
-        assert isnan(gas_const("exhaust", excess_oxidizing=0.0, fuel="kerosene"))
+        assert isnan(gas_const_exhaust(excess_oxidizing=0.0, fuel="kerosene"))
 
-    # Тесты на типы аргументов
-    def test_non_string_substance(self):
-        with pytest.raises((AssertionError, ValueError)):
-            gas_const(123)
-
-    def test_non_string_fuel(self):
-        with pytest.raises((AssertionError, ValueError)):
-            gas_const("exhaust", excess_oxidizing=1.0, fuel=123)
-
-    def test_very_large_alpha(self):
-        # Проверяем что не возникает ошибок при большом alpha
-        result = gas_const("exhaust", excess_oxidizing=1e10, fuel="kerosene")
+    def test_large_excess_oxidizing(self):
+        result = gas_const_exhaust(excess_oxidizing=1e10, fuel="kerosene")
         assert result == pytest.approx(288.1954313)  # Второе слагаемое стремится к 0
 
 
@@ -357,7 +364,7 @@ class TestStoichiometry:
         assert stoichiometry(fuel) == pytest.approx(14.35)
 
     # Тесты для мазутной группы
-    @pytest.mark.parametrize("fuel", ["MAZUT", "МАЗУТ", "Ф5", "Ф12"])
+    @pytest.mark.parametrize("fuel", ["MAZUT", "Ф5", "Ф12"])
     def test_mazut_group(self, fuel):
         assert stoichiometry(fuel) == pytest.approx(13.31)
 
