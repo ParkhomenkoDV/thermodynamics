@@ -278,10 +278,10 @@ def heat_capacity_p_exhaust(
         coefs = (0.2079764, 1.211806, -1.464097, 1.291195, -0.6385396, 0.1574277, -0.01518199)
         return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
     else:
-        result = composition["C"] / 12.01 * (44.01 * heat_capacity_p("CO2", temperature) - 32.0 * heat_capacity_p("O2", temperature))
-        result += composition["H"] / 1.008 * (9.008 * heat_capacity_p("H2O", temperature) - 8.0 * heat_capacity_p("O2", temperature))
-        result += composition["O2"] * heat_capacity_p("O2", temperature)
-        result += composition["H2O"] * heat_capacity_p("H2O", temperature)
+        result = composition.get("C", 0) / 12.01 * (44.01 * heat_capacity_p("CO2", temperature) - 32.0 * heat_capacity_p("O2", temperature))
+        result += composition.get("H", 0) / 1.008 * (9.008 * heat_capacity_p("H2O", temperature) - 8.0 * heat_capacity_p("O2", temperature))
+        result += composition.get("O2", 0) * heat_capacity_p("O2", temperature)
+        result += composition.get("H2O", 0) * heat_capacity_p("H2O", temperature)
         return result
 
 
