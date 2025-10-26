@@ -8,7 +8,7 @@ from thermodynamics import (
     atmosphere_standard,
     chemical_formula_to_dict,
     gas_const,
-    gas_const_exhaust,
+    gas_const_exhaust_fuel,
     gdf,
     heat_capacity,
     heat_capacity_p,
@@ -305,24 +305,24 @@ class TestGasConstExhaust:
         ],
     )
     def test_exhaust_with_valid_fuels(self, fuel, excess_oxidizing, expected):
-        assert gas_const_exhaust(excess_oxidizing, fuel) == pytest.approx(expected)
+        assert gas_const_exhaust_fuel(excess_oxidizing, fuel) == pytest.approx(expected)
 
     # Тесты на ошибки
     def test_invalid(self):
         with pytest.raises(ValueError):
-            gas_const_exhaust(excess_oxidizing=1.0, fuel="invalid_fuel")
+            gas_const_exhaust_fuel(excess_oxidizing=1.0, fuel="invalid_fuel")
 
-        with pytest.raises(TypeError):
-            gas_const_exhaust(excess_oxidizing="not_a_number", fuel="kerosene")
+        with pytest.raises((AssertionError, TypeError)):
+            gas_const_exhaust_fuel(excess_oxidizing="not_a_number", fuel="kerosene")
 
     def test_negative_excess_oxidizing(self):
-        assert isnan(gas_const_exhaust(excess_oxidizing=-1.0, fuel="kerosene"))
+        assert isnan(gas_const_exhaust_fuel(excess_oxidizing=-1.0, fuel="kerosene"))
 
     def test_zero_alpha(self):
-        assert isnan(gas_const_exhaust(excess_oxidizing=0.0, fuel="kerosene"))
+        assert isnan(gas_const_exhaust_fuel(excess_oxidizing=0.0, fuel="kerosene"))
 
     def test_large_excess_oxidizing(self):
-        result = gas_const_exhaust(excess_oxidizing=1e10, fuel="kerosene")
+        result = gas_const_exhaust_fuel(excess_oxidizing=1e10, fuel="kerosene")
         assert result == pytest.approx(288.1954313)  # Второе слагаемое стремится к 0
 
 

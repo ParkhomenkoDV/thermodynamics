@@ -144,9 +144,28 @@ def gas_const(substance: str) -> float:
         raise ValueError(f"{substance} not found")
 
 
-def gas_const_exhaust(excess_oxidizing: int | float, fuel: str) -> float:
+def gas_const_exhaust(
+    excess_oxidizing: int | float,
+    stoichiometry: int | float,
+    composition: dict[str:float],
+) -> float:
     """Газовая постоянная продуктов сгорания (Дж/кг/К)"""
-    assert isinstance(excess_oxidizing, (int, float, np.number)) or not isnan(excess_oxidizing), TypeError(f"type {excess_oxidizing} must be numeric")
+    assert isinstance(excess_oxidizing, (int, float, np.number)), TypeError(f"type {excess_oxidizing} must be numeric")
+    assert isinstance(stoichiometry, (int, float, np.number)), TypeError(f"type {stoichiometry} must be numeric")
+    assert isinstance(composition, dict), TypeError(f"type {composition} must be dict")
+
+    H2O = composition.get("H2O", 0)  # массовая доля волы в смеси
+    result = excess_oxidizing * stoichiometry
+    result += 28.966 * (composition.get("H2", 0) / 4.032 + composition.get("O2", 0) / 32) * (1 - H2O)
+    result += H2O * excess_oxidizing * stoichiometry * 0.60779
+    result *= 29.27
+    result /= 1 - H2O + excess_oxidizing * stoichiometry
+    return result * 9.80665  # СИ
+
+
+def gas_const_exhaust_fuel(excess_oxidizing: int | float, fuel: str) -> float:
+    """Газовая постоянная продуктов сгорания (Дж/кг/К)"""
+    assert isinstance(excess_oxidizing, (int, float, np.number)), TypeError(f"type {excess_oxidizing} must be numeric")
     assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
     fuel = fuel.upper()
     if fuel in ("C2H8N2", "KEROSENE"):
@@ -276,13 +295,13 @@ def heat_capacity_p_exhaust(
     """
     assert isinstance(temperature, (int, float, np.number)), TypeError(f"type {temperature} must be numeric")
 
-    if composition is None:  # as default composition = {"C": 0.85, "H": 0.15, "O2": 0, "H2O": 0}
+    if composition is None:  # as default composition = {"C": 0.85, "H2": 0.15, "O2": 0, "H2O": 0}
         t_1000 = temperature / 1000
         coefs = (0.2079764, 1.211806, -1.464097, 1.291195, -0.6385396, 0.1574277, -0.01518199)  # speedup
         return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
     elif isinstance(composition, dict):
         result = composition.get("C", 0) / 12.01 * (44.01 * heat_capacity_p("CO2", temperature) - 32.0 * heat_capacity_p("O2", temperature))
-        result += composition.get("H", 0) / 1.008 * (9.008 * heat_capacity_p("H2O", temperature) - 8.0 * heat_capacity_p("O2", temperature))
+        result += composition.get("H2", 0) / 1.008 * (9.008 * heat_capacity_p("H2O", temperature) - 8.0 * heat_capacity_p("O2", temperature))
         result += composition.get("O2", 0) * heat_capacity_p("O2", temperature)
         return result
     else:
