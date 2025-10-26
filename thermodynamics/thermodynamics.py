@@ -271,18 +271,19 @@ def heat_capacity_p_exhaust(
     (условная теплоемкость + теплоемкость окислителя * excess_oxidizing * stoichiometry) / (1 + excess_oxidizing * stoichiometry)
     """
     assert isinstance(temperature, (int, float, np.number)), TypeError(f"type {temperature} must be numeric")
-    assert isinstance(composition, dict), TypeError(f"type {composition} must be dict[str:float]")
 
     if composition is None:  # as default composition = {"C": 0.85, "H": 0.15, "O2": 0, "H2O": 0}
         t_1000 = temperature / 1000
-        coefs = (0.2079764, 1.211806, -1.464097, 1.291195, -0.6385396, 0.1574277, -0.01518199)
+        coefs = (0.2079764, 1.211806, -1.464097, 1.291195, -0.6385396, 0.1574277, -0.01518199)  # speedup
         return 4187 * sum(coef * t_1000**i for i, coef in enumerate(coefs))
-    else:
+    elif isinstance(composition, dict):
         result = composition.get("C", 0) / 12.01 * (44.01 * heat_capacity_p("CO2", temperature) - 32.0 * heat_capacity_p("O2", temperature))
         result += composition.get("H", 0) / 1.008 * (9.008 * heat_capacity_p("H2O", temperature) - 8.0 * heat_capacity_p("O2", temperature))
         result += composition.get("O2", 0) * heat_capacity_p("O2", temperature)
         result += composition.get("H2O", 0) * heat_capacity_p("H2O", temperature)
         return result
+    else:
+        raise TypeError(f"type {composition} must be dict[str:float]")
 
 
 def lower_heat(fuel: str) -> float:
