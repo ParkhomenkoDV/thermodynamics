@@ -7,5 +7,6 @@ parameters = Constants(
     p="pressure",
     d="density",
     mf="mass_flow",
+    eo="excess_oxidizing",  # коэффициент избытка окислителя
     gc="gas_const",
 )
