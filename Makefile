@@ -48,7 +48,7 @@ activate:
 install:
 	@echo "$(BLUE)Installing production dependencies...$(RESET)"
 	$(PIP_PATH) install --upgrade -r $(REQUIREMENTS)
-	$(PIP_PATH) install --upgrade black flake8 pylint isort pytest	
+	$(PIP_PATH) install --upgrade black flake8 pylint isort pytest pytest-benchmark
 
 test:
 	@echo "$(BLUE)Running tests...$(RESET)"
