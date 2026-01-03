@@ -7,6 +7,7 @@ from thermodynamics import (
     adiabatic_index,
     atmosphere_standard,
     chemical_formula_to_dict,
+    critical_sonic_velocity,
     gas_const,
     gas_const_exhaust_fuel,
     gdf,
@@ -17,7 +18,6 @@ from thermodynamics import (
     stoichiometry,
     temperature_atmosphere_standard,
     thermal_conductivity,
-    сritical_sonic_velocity,
 )
 
 from .parameters import parameters as tdp
@@ -713,7 +713,7 @@ class TestSonicVelocity:
 
 
 class TestCriticalSonicVelocity:
-    """Тесты для функции сritical_sonic_velocity"""
+    """Тесты для функции critical_sonic_velocity"""
 
     EPSREL = 1e-6
 
@@ -728,5 +728,5 @@ class TestCriticalSonicVelocity:
     )
     def test_сritical_sonic_velocity(self, k, gc, t, expected):
         """Тест для стандартных условий воздуха"""
-        result = сritical_sonic_velocity(k, gc, t)
+        result = critical_sonic_velocity(k, gc, t)
         assert isclose(result, expected, rtol=self.EPSREL)
