@@ -192,7 +192,9 @@ def gas_const_exhaust_fuel(excess_oxidizing: int | float, fuel: str) -> float:
 
 def stoichiometry(fuel: str) -> float:
     """Стехиометрический коэффициент []"""
-    assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
+    if not isinstance(fuel, str):
+        raise TypeError(f"type {fuel} must be str")
+
     fuel = fuel.upper()
     if fuel in ("C2H8N2", "KEROSENE", "T-1", "T-2", "TC-1", "TC1"):
         return 14.61
@@ -280,20 +282,21 @@ def heat_capacity_p(substance: str, temperature: int | float | np.number) -> flo
         raise ValueError(f"{substance} not found")
 
 
-def heat_capacity_p_exhaust(
+def heat_capacity_p_exhaust_eo1(
     temperature: int | float | np.number,
     composition: dict[str:float] = None,
 ) -> float:
     """
-    Условная теплоемкость выхлопа (Дж/кг/К) [PTM 1677-83]
+    Условная теплоемкость выхлопа при коэффициенте избытка воздуха = 1 (Дж/кг/К) [PTM 1677-83]
 
     Истинная теплоемкость выхлопа (Жд/кг/К) считается как:
     H2O = composition.get('H2O', 0)  # массовая доля волы в смеси
     result = (1 - H2O) * (условная_теплоемкость + теплоемкость_окислителя * excess_oxidizing * stoichiometry)
-    result += H2O * excess_oxidizing * stoichiometry * heat_capacity_p('H2O', temperature)
+    result += H2O * excess_oxidizing * stoichiometry * теплоемкость_воды
     result /= (1 - H2O + excess_oxidizing * stoichiometry)
     """
-    assert isinstance(temperature, (int, float, np.number)), TypeError(f"type {temperature} must be numeric")
+    if not isinstance(temperature, (int, float, np.number)):
+        raise TypeError(f"type {temperature} must be numeric")
 
     if composition is None:  # as default composition = {"C": 0.85, "H2": 0.15, "O2": 0, "H2O": 0}
         t_1000 = temperature / 1000
@@ -306,6 +309,49 @@ def heat_capacity_p_exhaust(
         return result
     else:
         raise TypeError(f"type {composition} must be dict[str:float]")
+
+
+def heat_capacity_p_exhaust(
+    heat_capacity_p_exhaust_eo1: float,  # условная теплоемкость выхлопных газов
+    heat_capacity_p_oxidizing: float,  # теплоемкость окислителя при постоянном давлении
+    heat_capacity_H20: float,  # теплоемкость пара при постоянном давлении
+    excess_oxidizing: float,  # коэффициент избытка окислителя
+    stoichiometry: float,  # стехиометрический коэффициент
+    H2O: float,  # массовая доля волы в смеси
+):
+    """
+    Теплоемкость выхлопных газов при постоянном давлении с учетом влажности.
+
+    Формула расчета:
+        hcp = (hcp_dry + hcp_wet) / (1 - H2O + excess_oxidizing * stoichiometry)
+
+    где:
+        - hcp_dry = (1 - H2O) * (heat_capacity_p_exhaust_eo1 + heat_capacity_p_oxidizing * excess_oxidizing * stoichiometry)
+        - hcp_wet = H2O * excess_oxidizing * stoichiometry * heat_capacity_H20
+
+    Returns:
+        Теплоемкость выхлопных газов (float)
+
+    Raises:
+        ZeroDivisionError: Если знаменатель равен нулю
+        ValueError: Если входные параметры имеют некорректные значения
+    """
+    if not (0 <= H2O <= 1):
+        raise ValueError(f"{H2O=} not in [0, 1]")
+    if excess_oxidizing < 0:
+        raise ValueError(f"{excess_oxidizing=} must be >= 0")
+    if stoichiometry <= 0:
+        raise ValueError(f"{stoichiometry=} must be > 0")
+
+    # Сухой состав
+    hcp_dry = (1 - H2O) * (heat_capacity_p_exhaust_eo1 + heat_capacity_p_oxidizing * excess_oxidizing * stoichiometry)
+    # Влажный состав
+    hcp_wet = H2O * excess_oxidizing * stoichiometry * heat_capacity_H20
+    # Перерасчет на сухой состав
+    denominator = 1 - H2O + excess_oxidizing * stoichiometry
+
+    hcp = (hcp_dry + hcp_wet) / denominator
+    return hcp
 
 
 def lower_heat(fuel: str) -> float:

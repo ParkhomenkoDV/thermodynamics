@@ -13,6 +13,7 @@ from thermodynamics import (
     gdf,
     heat_capacity,
     heat_capacity_p,
+    heat_capacity_p_exhaust,
     pressure_atmosphere_standard,
     sonic_velocity,
     stoichiometry,
@@ -581,7 +582,7 @@ class TestThermalConductivity:
 
 
 class TestHeatCapacityP:
-    """Тесты для функции heat_capacity_p()"""
+    """Тесты для функции heat_capacity_p"""
 
     # Тестовые данные
     TEST_TEMPERATURES = [300, 500, 1000, 1500]
@@ -678,6 +679,56 @@ class TestHeatCapacityP:
         temp = 1000
         expected = 4187 * (0.2521923 + -0.1186612 * 1 + 0.3360775 * 1**2 + -0.3073812 * 1**3 + 0.1382207 * 1**4 + -0.03090246 * 1**5 + 0.002745383 * 1**6)
         assert pytest.approx(expected, rel=1e-6) == heat_capacity_p("AIR", temp)
+
+
+class TestHeatCapacityPExhaust:
+    """Тесты для функции heat_capacity_p_exhaust"""
+
+    @pytest.mark.parametrize(
+        "excess_oxidizing",
+        (0.0, 0.1, 0.5, 0.9, 1.0, 2.0, 3.0, 5.0),
+    )
+    @pytest.mark.parametrize(
+        "H2O",
+        (0.0, 0.1, 0.5, 0.9),
+    )
+    def test_heat_capacity_p_exhaust(self, excess_oxidizing, H2O):
+        """Тест базового расчета"""
+        result = heat_capacity_p_exhaust(1200, 1000, 1860, excess_oxidizing, 14.61, H2O)
+        hcp_dry = (1 - H2O) * (1200 + 1000 * excess_oxidizing * 14.61)
+        hcp_wet = H2O * excess_oxidizing * 14.61 * 1860
+        expected = (hcp_dry + hcp_wet) / (1 - H2O + excess_oxidizing * 14.61)
+        assert abs(result - expected) < 1e-4
+
+    def test_invalid_H2O_negative(self):
+        """Тест на отрицательное значение H2O"""
+        with pytest.raises(ValueError):
+            heat_capacity_p_exhaust(1200, 1000, 1860, 3, 14.61, -0.1)
+
+    def test_invalid_H2O_above_one(self):
+        """Тест на значение H2O больше 1"""
+        with pytest.raises(ValueError):
+            heat_capacity_p_exhaust(1200, 1000, 1860, 3, 14.61, 3)
+
+    def test_invalid_excess_oxidizing_negative(self):
+        """Тест на отрицательный коэффициент избытка окислителя"""
+        with pytest.raises(ValueError):
+            heat_capacity_p_exhaust(1200, 1000, 1860, -1, 14.61, 0.1)
+
+    def test_invalid_stoichiometry_zero(self):
+        """Тест на нулевой стехиометрический коэффициент"""
+        with pytest.raises(ValueError):
+            heat_capacity_p_exhaust(1200, 1000, 1860, 3, 0, 0.1)
+
+    def test_invalid_stoichiometry_negative(self):
+        """Тест на отрицательный стехиометрический коэффициент"""
+        with pytest.raises(ValueError):
+            heat_capacity_p_exhaust(1200, 1000, 1860, 3, -14.61, 0.1)
+
+    def test_division_by_zero(self):
+        """Тест на деление на ноль (все компоненты - вода)"""
+        with pytest.raises(ZeroDivisionError):
+            heat_capacity_p_exhaust(1200, 1000, 1860, 0, 14.61, 1)
 
 
 class TestHeatCapacity:
