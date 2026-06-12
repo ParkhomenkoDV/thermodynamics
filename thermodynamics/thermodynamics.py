@@ -16,7 +16,7 @@ GAS_CONST = 8.314_462_618_153_24  # Универсальная газовая п
 
 
 def sonic_velocity(k: float, gas_const: float, temperature: float) -> float:
-    """Критическая скорость звука"""
+    """Cкорость звука"""
     return (k * gas_const * temperature) ** 0.5
 
 
@@ -49,17 +49,17 @@ def gdf(
         raise ValueError(f'{parameter} not in ("T", "P", "D", "G", "MF", "I", "MV")')
 
 
-def temperature_atmosphere_standard(height) -> tuple[float, str]:
+def temperature_atmosphere_standard(height: float) -> tuple[float, str]:
     """Статическая температура стандартной атмосферы"""
     return 288.15 - 0.00651 * height if height < 11_000 else 216.65, "K"
 
 
-def pressure_atmosphere_standard(height) -> tuple[float, str]:
+def pressure_atmosphere_standard(height: float) -> tuple[float, str]:
     """Статическое давление стандартной атмосферы"""
     return (101_325 * (temperature_atmosphere_standard(height)[0] / 288.15) ** 5.2533 if height < 11_000 else 22_699.9 * np.exp((11_000 - height) / 6318)), "Pa"
 
 
-def atmosphere_standard(height: int | float) -> dict[str : tuple[float, str]]:
+def atmosphere_standard(height: float) -> dict[str : tuple[float, str]]:
     """Атмосфера стандартная ГОСТ 4401-81"""
     return {
         tdp.t: temperature_atmosphere_standard(height),
