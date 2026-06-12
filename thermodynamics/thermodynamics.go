@@ -75,3 +75,49 @@ func AtmosphereStandard(height float64) map[string]float64 {
 		"p": pressureAtmosphereStandard(height),
 	}
 }
+
+type Substance string
+
+const (
+	Air Substance = "Air"
+	N2  Substance = "N2"
+	NH3 Substance = "NH3"
+	Ar  Substance = "Ar"
+	H2  Substance = "H2"
+	He  Substance = "He"
+	O2  Substance = "O2"
+	Kr  Substance = "Kr"
+	Xe  Substance = "Xe"
+	Ne  Substance = "Ne"
+	CO2 Substance = "CO2"
+)
+
+// Газовая постоянная (Дж/кг/К)
+func GC(substance Substance) float64 {
+	switch substance {
+	case Air:
+		return 287.14
+	case N2:
+		return 297
+	case NH3:
+		return 488.5
+	case Ar:
+		return 208.2
+	case H2:
+		return 4118.2
+	case He:
+		return 2078.2
+	case O2:
+		return 260
+	case Kr:
+		return 99.3
+	case Xe:
+		return 63.4
+	case Ne:
+		return 412.2
+	case CO2:
+		return 189
+	default:
+		panic(fmt.Errorf("GasConst(): %s not found", substance))
+	}
+}

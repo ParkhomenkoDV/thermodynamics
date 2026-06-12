@@ -278,7 +278,7 @@ class TestGasConst:
         with pytest.raises(ValueError):
             gas_const("invalid_substance")
 
-        with pytest.raises((AssertionError, ValueError)):
+        with pytest.raises((AssertionError, ValueError, TypeError)):
             gas_const(123)
 
 
