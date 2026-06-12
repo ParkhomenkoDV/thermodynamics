@@ -31,11 +31,14 @@ def gdf(
     adiabatic_index: float = None,
 ) -> float:
     """Газодинамические функции"""
-    assert isinstance(parameter, str), TypeError(f"type {parameter} must be str")
-    assert isinstance(equivalent_speed, (int, float, np.number)), TypeError(f"type {equivalent_speed} must be numeric")
+    if not isinstance(parameter, str):
+        raise TypeError(f"type {parameter} must be str")
+    if not isinstance(equivalent_speed, (int, float, np.number)):
+        raise TypeError(f"type {equivalent_speed} must be numeric")
     parameter = parameter.upper()
     if parameter == "T":
-        assert isinstance(adiabatic_index, (int, float, np.number)), TypeError(f"type {adiabatic_index} must be numeric")
+        if not isinstance(adiabatic_index, (int, float, np.number)):
+            raise TypeError(f"type {adiabatic_index} must be numeric")
         return 1 - equivalent_speed**2 * ((adiabatic_index - 1) / (adiabatic_index + 1))
     elif parameter == "P":
         return gdf("T", equivalent_speed, adiabatic_index) ** (adiabatic_index / (adiabatic_index - 1))
@@ -116,7 +119,8 @@ def adiabatic_index(gas_const: int | float, cp: int | float) -> float:
 
 def gas_const(substance: str) -> float:
     """Газовая постоянная (Дж/кг/К)"""
-    assert isinstance(substance, str), TypeError(f"type {substance} must be str")
+    if not isinstance(substance, str):
+        raise TypeError(f"type {substance} must be str")
 
     if substance.upper() == "AIR":
         return 287.14
@@ -150,9 +154,12 @@ def gas_const_exhaust(
     composition: dict[str:float],
 ) -> float:
     """Газовая постоянная продуктов сгорания (Дж/кг/К)"""
-    assert isinstance(excess_oxidizing, (int, float, np.number)), TypeError(f"type {excess_oxidizing} must be numeric")
-    assert isinstance(stoichiometry, (int, float, np.number)), TypeError(f"type {stoichiometry} must be numeric")
-    assert isinstance(composition, dict), TypeError(f"type {composition} must be dict")
+    if not isinstance(excess_oxidizing, (int, float, np.number)):
+        raise TypeError(f"type {excess_oxidizing} must be numeric")
+    if not isinstance(stoichiometry, (int, float, np.number)):
+        raise TypeError(f"type {stoichiometry} must be numeric")
+    if not isinstance(composition, dict):
+        TypeError(f"type {composition} must be dict")
 
     H2O = composition.get("H2O", 0)  # массовая доля волы в смеси
     result = excess_oxidizing * stoichiometry
@@ -165,8 +172,10 @@ def gas_const_exhaust(
 
 def gas_const_exhaust_fuel(excess_oxidizing: int | float, fuel: str) -> float:
     """Газовая постоянная продуктов сгорания (Дж/кг/К)"""
-    assert isinstance(excess_oxidizing, (int, float, np.number)), TypeError(f"type {excess_oxidizing} must be numeric")
-    assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
+    if not isinstance(excess_oxidizing, (int, float, np.number)):
+        raise TypeError(f"type {excess_oxidizing} must be numeric")
+    if not isinstance(fuel, str):
+        raise TypeError(f"type {fuel} must be str")
     fuel = fuel.upper()
     if fuel in ("C2H8N2", "KEROSENE"):
         return 288.1954313 + 0.691695880 / excess_oxidizing if 0 < excess_oxidizing else nan
@@ -244,7 +253,8 @@ def heat_capacity(substance: str, temperature) -> float:
 
 def heat_capacity_p(substance: str, temperature: int | float | np.number) -> float:
     """Теплоемкость при постоянном давлении (Дж/кг/К)"""
-    assert isinstance(substance, str), TypeError(f"type {substance} must be str")
+    if not isinstance(substance, str):
+        raise TypeError(f"type {substance} must be str")
 
     if substance.upper() == "AIR":
         """Теплоемкость воздуха [PTM 1677-83]"""
@@ -356,7 +366,8 @@ def heat_capacity_p_exhaust(
 
 def lower_heat(fuel: str) -> float:
     """Низшая теплота сгорания горючего при коэффициенте избытка окислителя = 1"""
-    assert isinstance(fuel, str), TypeError(f"type {fuel} must be str")
+    if not isinstance(fuel, str):
+        raise TypeError(f"type {fuel} must be str")
     fuel = fuel.upper()
     if fuel in ("C2H8N2", "KEROSENE", "TC1", "TC-1", "PETROL"):
         return 0.5 * (43_600_000 + 42_700_000)
@@ -376,11 +387,14 @@ def dynamic_viscosity(
     excess_oxidizing: int | float | np.number = nan,
 ) -> float:
     """Динамическая вязкость (Па*с)"""
-    assert isinstance(substance, str), TypeError(f"type {substance} must be str")
-    assert isinstance(temperature, (int, float, np.number)), TypeError(f"type {temperature} must be numeric")
+    if not isinstance(substance, str):
+        raise TypeError(f"type {substance} must be str")
+    if not isinstance(temperature, (int, float, np.number)):
+        raise TypeError(f"type {temperature} must be numeric")
 
     if substance.upper() == "EXHAUST":
-        assert not isnan(excess_oxidizing), ValueError(f"{excess_oxidizing} must be numeric")
+        if isnan(excess_oxidizing):
+            raise ValueError(f"{excess_oxidizing} must be numeric")
         coefs = (+0.505, +4.849, -1.333, +0.229)
         t_1000 = temperature / 1_000
         return 10 ** (-5) * (sum(coef * t_1000**i for i, coef in enumerate(coefs)) - 0.275 / excess_oxidizing)
@@ -412,8 +426,10 @@ def dynamic_viscosity(
 
 def thermal_conductivity(substance: str, temperature: int | float | np.number) -> float:
     """Теплопроводность (Вт/м/К)"""
-    assert isinstance(substance, str), TypeError(f"type {substance} must be str")
-    assert isinstance(temperature, (int, float, np.number)), TypeError(f"type {temperature} must be numeric")
+    if not isinstance(substance, str):
+        raise TypeError(f"type {substance} must be str")
+    if not isinstance(temperature, (int, float, np.number)):
+        raise TypeError(f"type {temperature} must be numeric")
 
     if substance == "N2":
         return 241.9 / 10**4 * (temperature / T0) ** 0.8
