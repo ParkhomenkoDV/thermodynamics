@@ -6,7 +6,6 @@ parameters = Constants(
     t="temperature",  # температура
     p="pressure",  # далвение
     d="density",  # плотность
-    mf="mass_flow",  # массовый расход
     eo="excess_oxidizing",  # коэффициент избытка окислителя
     gc="gas_const",  # газовая постоянная
     hc="heat_capacity",  # теплоемкость
